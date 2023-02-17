@@ -40,7 +40,7 @@ func eventHandler(ctx context.Context, event events.CloudWatchEvent) (events.Clo
 		log.Printf("Usuário %s enviado: %s", user.ID, *msgId)
 	}
 
-	log.Printf("Finalizando com %d usuários em %dms", len(users), time.Now().Sub(inicio))
+	log.Printf("Finalizando com %d usuários em %dms", len(users), time.Now().Sub(inicio).Milliseconds())
 
 	return event, error
 
