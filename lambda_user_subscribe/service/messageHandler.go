@@ -13,7 +13,7 @@ func CreateEntity(body string) (model.UserEntity, error) {
 	message := model.UserEntity{}
 	json.Unmarshal([]byte(body), &message)
 
-	message.TTL = strconv.FormatInt(time.Now().Add(time.Minute).UnixNano(), 10)
+	message.TTL = strconv.FormatInt(time.Now().Add(time.Minute*5).UnixNano(), 10)
 
 	return message, nil
 }

@@ -12,10 +12,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
 )
 
-const (
-	TABLE_NAME = "employee"
-)
-
 func SaveActiveUser(cfg aws.Config, user model.UserEntity) error {
 
 	svc := dynamodb.NewFromConfig(cfg)

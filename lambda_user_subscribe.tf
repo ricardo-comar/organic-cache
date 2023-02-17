@@ -19,7 +19,7 @@ resource "aws_lambda_function" "user_subscribe" {
 
   environment {
     variables = {
-      "ACTIVE_USERS_TABLE" = aws_dynamodb_table.active_users.name
+      ACTIVE_USERS_TABLE = aws_dynamodb_table.active_users.name
     }
   }
 

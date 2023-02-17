@@ -14,8 +14,8 @@ services:
       - "127.0.0.1:4571:4571"
       - "127.0.0.1:8080:8080"
     environment:
-      - DEFAULT_REGION=sa-east-1
-      - AWS_REGION=sa-east-1
+      - DEFAULT_REGION=us-east-1
+      - AWS_REGION=us-east-1
       # - SERVICES=apigateway,cloudwatch,dynamodb,events,iam,sqs,lambda,logs,sts
       - AWS_ACCESS_KEY=test
       - AWS_SECRET_KEY=test
