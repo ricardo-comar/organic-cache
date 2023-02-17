@@ -34,7 +34,9 @@ localstack:
 # 		--entries '[{"Time": "2016-01-14T01:02:03Z", "Source": "com.mycompany.myapp", "Resources": ["resource1", "resource2"], "DetailType": "myDetailType", "Detail": "{ \"key1\": \"value1\", \"key2\": \"value2\" }"}]'
 
 # msg:
-# 	aws --endpoint http://localhost:4566 sqs send-message --queue-url http://localhost:4566/000000000000/identity-provider-sqs-employees --message-body "IOT-1 Temp: 51C"
+# 	aws --endpoint http://localhost:4566 sqs send-message --queue-url http://localhost:4566/000000000000/organic-cache-sqs-employees --message-body "IOT-1 Temp: 51C"
 
-gateway:
-	curl http://localhost:4566/restapis/$(shell aws --endpoint-url=http://localhost:4566 apigateway get-rest-apis | jq -r '.items[0].id')/v1/\_user_request_/employees | jq
+subscribe:
+	curl -v -X PUT http://localhost:4566/restapis/$(shell aws --endpoint-url=http://localhost:4566 apigateway get-rest-apis | jq -r '.items[0].id')/v1/\_user_request_/subscribe \
+	-H "Content-Type: application/json" \
+   -d '{"id": "ABC"}' | jq

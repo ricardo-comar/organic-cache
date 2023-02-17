@@ -1,7 +1,7 @@
 version: '2.1'
 services:
   localstack:
-    container_name: "identity-provider-localstack"
+    container_name: "organic-cache-localstack"
     image: localstack/localstack:1.2.0
     network_mode: bridge
     ports:
