@@ -11,18 +11,11 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
 )
 
-func QueryUsers(cfg aws.Config) ([]model.UserEntity, error) {
-
-	svc := dynamodb.NewFromConfig(cfg)
-
-	localendpoint, found := os.LookupEnv("LOCALSTACK_HOSTNAME")
-	if found {
-		svc = dynamodb.NewFromConfig(cfg, dynamodb.WithEndpointResolver(dynamodb.EndpointResolverFromURL("http://"+localendpoint+":4566")))
-	}
+func QueryUsers(cli *dynamodb.Client) ([]model.UserEntity, error) {
 
 	var totalUsers []model.UserEntity
 
-	input := dynamodb.NewScanPaginator(svc, &dynamodb.ScanInput{
+	input := dynamodb.NewScanPaginator(cli, &dynamodb.ScanInput{
 		TableName: aws.String(os.Getenv("ACTIVE_USERS_TABLE")),
 	})
 
