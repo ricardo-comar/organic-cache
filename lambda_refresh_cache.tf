@@ -1,21 +1,21 @@
-data "archive_file" "lambda_refresh_cache_zip" {
+data "archive_file" "lambda_cache_refresh_zip" {
   type        = "zip"
-  source_file = "bin/lambda_refresh_cache"
-  output_path = "bin/refresh_cache.zip"
+  source_file = "bin/lambda_cache_refresh"
+  output_path = "bin/cache_refresh.zip"
 }
 
 // Function
-resource "aws_lambda_function" "refresh_cache" {
-  filename         = data.archive_file.lambda_refresh_cache_zip.output_path
-  function_name    = "organic-cache-refresh_cache"
+resource "aws_lambda_function" "cache_refresh" {
+  filename         = data.archive_file.lambda_cache_refresh_zip.output_path
+  function_name    = "organic-cache-cache_refresh"
   description      = "Price Cache Refresh Lambda"
-  role             = aws_iam_role.lambda_role_refresh_cache.arn
-  handler          = "lambda_refresh_cache"
-  source_code_hash = filebase64sha256(data.archive_file.lambda_refresh_cache_zip.output_path)
+  role             = aws_iam_role.lambda_role_cache_refresh.arn
+  handler          = "lambda_cache_refresh"
+  source_code_hash = filebase64sha256(data.archive_file.lambda_cache_refresh_zip.output_path)
   runtime          = "go1.x"
   memory_size      = 1024
   timeout          = 30
-  depends_on       = [aws_iam_role_policy_attachment.attach_iam_policy_to_iam_role_refresh_cache]
+  depends_on       = [aws_iam_role_policy_attachment.attach_iam_policy_to_iam_role_cache_refresh]
 
   environment {
     variables = {
@@ -27,8 +27,8 @@ resource "aws_lambda_function" "refresh_cache" {
 
 
 
-resource "aws_iam_role" "lambda_role_refresh_cache" {
-  name               = "lambda_role_refresh_cache"
+resource "aws_iam_role" "lambda_role_cache_refresh" {
+  name               = "lambda_role_cache_refresh"
   assume_role_policy = <<EOF
 {
  "Version": "2012-10-17",
@@ -46,9 +46,9 @@ resource "aws_iam_role" "lambda_role_refresh_cache" {
 EOF
 }
 
-resource "aws_iam_policy" "iam_policy_for_lambda_refresh_cache" {
+resource "aws_iam_policy" "iam_policy_for_lambda_cache_refresh" {
 
-  name        = "aws_iam_policy_for_terraform_aws_lambda_role_refresh_cache"
+  name        = "aws_iam_policy_for_terraform_aws_lambda_role_cache_refresh"
   path        = "/"
   description = "AWS IAM Policy for managing aws lambda role"
   policy      = <<EOF
@@ -93,27 +93,27 @@ resource "aws_iam_policy" "iam_policy_for_lambda_refresh_cache" {
 EOF
 }
 
-resource "aws_iam_role_policy_attachment" "attach_iam_policy_to_iam_role_refresh_cache" {
-  role       = aws_iam_role.lambda_role_refresh_cache.name
-  policy_arn = aws_iam_policy.iam_policy_for_lambda_refresh_cache.arn
+resource "aws_iam_role_policy_attachment" "attach_iam_policy_to_iam_role_cache_refresh" {
+  role       = aws_iam_role.lambda_role_cache_refresh.name
+  policy_arn = aws_iam_policy.iam_policy_for_lambda_cache_refresh.arn
 }
 
-resource "aws_cloudwatch_event_rule" "refresh_cache_lambda_event_rule" {
-  name                = "refresh-cache-lambda-event-rule"
+resource "aws_cloudwatch_event_rule" "cache_refresh_lambda_event_rule" {
+  name                = "cache-refresh-lambda-event-rule"
   description         = "retry scheduled every 1 min"
   schedule_expression = "rate(1 minutes)"
 }
 
-resource "aws_cloudwatch_event_target" "refresh_cache_lambda_target" {
-  arn       = aws_lambda_function.refresh_cache.arn
-  target_id = aws_lambda_function.refresh_cache.id
-  rule      = aws_cloudwatch_event_rule.refresh_cache_lambda_event_rule.name
+resource "aws_cloudwatch_event_target" "cache_refresh_lambda_target" {
+  arn       = aws_lambda_function.cache_refresh.arn
+  target_id = aws_lambda_function.cache_refresh.id
+  rule      = aws_cloudwatch_event_rule.cache_refresh_lambda_event_rule.name
 }
 
-resource "aws_lambda_permission" "allow_cloudwatch_to_call_refresh_cache_lambda" {
+resource "aws_lambda_permission" "allow_cloudwatch_to_call_cache_refresh_lambda" {
   statement_id  = "AllowExecutionFromCloudWatch"
   action        = "lambda:InvokeFunction"
-  function_name = aws_lambda_function.refresh_cache.function_name
+  function_name = aws_lambda_function.cache_refresh.function_name
   principal     = "events.amazonaws.com"
-  source_arn    = aws_cloudwatch_event_rule.refresh_cache_lambda_event_rule.arn
+  source_arn    = aws_cloudwatch_event_rule.cache_refresh_lambda_event_rule.arn
 }
