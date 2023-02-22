@@ -20,7 +20,7 @@ resource "aws_lambda_function" "quotation_handler" {
   environment {
     variables = {
       QUOTATION_QUEUE = aws_sqs_queue.quotation_queue.url
-      RESPONSE_TOPIC_ARN = aws_sns_topic.quotation_response.arn
+      QUOTATION_TABLE = aws_dynamodb_table.quotations.name
     }
   }
 

@@ -55,3 +55,16 @@ resource "aws_dynamodb_table" "user_prices" {
     type = "S"
   }
 }
+
+resource "aws_dynamodb_table" "quotations" {
+  name           = "quotations"
+  billing_mode   = "PROVISIONED"
+  read_capacity  = "2"
+  write_capacity = "1"
+  hash_key       = "id"
+ 
+  attribute {
+    name = "id"
+    type = "S"
+  }
+}
