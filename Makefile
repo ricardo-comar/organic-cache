@@ -40,3 +40,8 @@ subscribe:
 	curl -v -X PUT http://localhost:4566/restapis/$(shell aws --endpoint-url=http://localhost:4566 apigateway get-rest-apis | jq -r '.items[0].id')/v1/\_user_request_/subscribe \
 	-H "Content-Type: application/json" \
    -d '{"id": "ABC"}' | jq
+
+quotation:
+	curl -v -X POST http://localhost:4566/restapis/$(shell aws --endpoint-url=http://localhost:4566 apigateway get-rest-apis | jq -r '.items[0].id')/v1/\_user_request_/quotation \
+	-H "Content-Type: application/json" \
+   -d '{"id": "ABC" }' | jq
