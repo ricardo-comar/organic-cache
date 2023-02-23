@@ -25,24 +25,27 @@ func GenerateUserPrices(dyncli *dynamodb.Client, user *model.UserEntity) error {
 	}
 	fmt.Printf("User discounts: %+v\n", userDiscounts)
 
-	prices := model.UserPricesEntity{}
-	prices.UserId = user.ID
-	prices.Prices = []model.ProductPrice{}
+	prices := model.UserPricesEntity{
+		UserId: user.ID,
+	}
 
 	for _, product := range *products {
 
 		finalValue := product.Value
 		discount := float32(0.0)
 
-		for _, userDiscount := range userDiscounts.Discounts {
-			if product.ProductId == userDiscount.ProductId {
-				discount = userDiscount.Percentage
-				finalValue = product.Value * (discount / 100)
+		if userDiscounts != nil {
+			for _, userDiscount := range userDiscounts.Discounts {
+				if product.ProductId == userDiscount.ProductId {
+					discount = userDiscount.Percentage
+					finalValue = product.Value * (1 - (discount / 100))
+				}
 			}
 		}
 
 		prices.Prices = append(prices.Prices, model.ProductPrice{
 			ProductId:     product.ProductId,
+			ProductName:   product.Name,
 			OriginalValue: product.Value,
 			Value:         finalValue,
 			Discount:      discount,

@@ -1,6 +1,6 @@
 package model
 
 type UserEntity struct {
-	ID string `json:"id"`
+	ID string `dynamodbav:"id" json:"id"`
 	// TTL string `dynamodbav:"ttl" json:"ttl"`
 }

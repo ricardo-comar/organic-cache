@@ -6,6 +6,6 @@ type DiscountEntity struct {
 }
 
 type ProductDiscount struct {
-	ProductId  string  `json:"product_id"`
-	Percentage float32 `json:"percentage"`
+	Percentage float32 `dynamodbav:"percentage" json:"percentage"`
+	ProductId  string  `dynamodbav:"product_id" json:"product_id"`
 }

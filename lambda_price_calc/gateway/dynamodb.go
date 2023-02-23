@@ -20,13 +20,13 @@ func QueryUserDiscounts(dyncli *dynamodb.Client, user *model.UserEntity) (*model
 		},
 	})
 
-	discounts := model.DiscountEntity{}
+	var discounts *model.DiscountEntity
 	if err == nil && output.Item != nil {
-		attributevalue.UnmarshalMap(output.Item, &discounts)
+		discounts = &model.DiscountEntity{}
+		err = attributevalue.UnmarshalMap(output.Item, discounts)
 	}
 
-	return &discounts, nil
-
+	return discounts, err
 }
 
 func ScanProducts(dyncli *dynamodb.Client) (*[]model.ProductEntity, error) {

@@ -23,7 +23,7 @@ func QueryQuotation(cli *dynamodb.Client, requestId string) (*model.ProductQuota
 
 	var quotation *model.ProductQuotation
 	if err == nil && output.Item != nil {
-		attributevalue.UnmarshalMap(output.Item, &quotation)
+		attributevalue.UnmarshalMap(output.Item, quotation)
 	}
 
 	return quotation, nil

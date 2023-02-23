@@ -102,7 +102,7 @@ func handleMessage(ctx context.Context, msg events.SQSMessage) (interface{}, err
 						Quantity:      req.Quantity,
 						OriginalValue: product.OriginalValue,
 						Discount:      product.Discount,
-						FinalValue:    (product.Value * req.Quantity) * (product.Discount / 100),
+						FinalValue:    (product.Value * req.Quantity),
 					})
 				}
 

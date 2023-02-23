@@ -15,7 +15,7 @@ func ResponseWait(ctx *context.Context, cli *dynamodb.Client, requestId string) 
 
 	// Init hazelcast client
 	config := hazelcast.Config{}
-	config.Cluster.Network.SetAddresses("localhost:5701")
+	config.Cluster.Network.SetAddresses("hazelcast:5701")
 	client, err := hazelcast.StartNewClientWithConfig(*ctx, config)
 	if err != nil {
 		panic(err)
