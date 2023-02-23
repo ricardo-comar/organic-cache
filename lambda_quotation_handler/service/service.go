@@ -35,9 +35,10 @@ func ResponseWait(ctx *context.Context, cli *dynamodb.Client, requestId string) 
 	// Add a message listener to the topic.
 	_, err = myTopic.AddMessageListener(*ctx, func(event *hazelcast.MessagePublished) {
 		log.Printf("**** Message received: %+v", string(event.Value.([]byte)[:]))
+
 		msg := model.QuotationEntity{}
 		json.Unmarshal(event.Value.([]byte), &msg)
-		log.Printf("**** Message unmarshalled: %+v", msg)
+
 		if msg.Id == requestId {
 			quotation = &msg
 			done <- true
