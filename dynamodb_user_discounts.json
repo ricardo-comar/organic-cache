@@ -6,51 +6,41 @@
                     "user_id": {"S":"AAA"},
                     "discounts": {
                         "L": [
-                            {"M": 
-                            {
+                            {"M": {
                                 "product_id": {"S":"P01"},
                                 "percentage": {"N":"10.0"}
-                            }
-                            },
-                            {"M":
-                            {
+                            } },
+                            {"M": {
                                 "product_id": {"S":"P02"},
                                 "percentage": {"N":"15.0"}
-                            }
-                            },
-                            {"M":
-                            {
+                            } },
+                            {"M": {
                                 "product_id": {"S":"P03"},
                                 "percentage": {"N":"12.0"}
-                            }
-                        }
+                            } }
                         ]
                     }
                 }
-            },
+            }
+        },
+        {
             "PutRequest": {
                 "Item": {
                     "user_id": {"S":"BBB"},
                     "discounts": {
                         "L": [
-                            {"M": 
-                            {
+                            {"M": {
                                 "product_id": {"S":"P01"},
                                 "percentage": {"N":"11.0"}
-                            }
-                            },
-                            {"M":
-                            {
+                            } },
+                            {"M": {
                                 "product_id": {"S":"P02"},
                                 "percentage": {"N":"12.0"}
-                            }
-                            },
-                            {"M":
-                            {
+                            } },
+                            {"M": {
                                 "product_id": {"S":"P03"},
                                 "percentage": {"N":"13.0"}
-                            }
-                        }
+                            } }
                         ]
                     }
                 }
