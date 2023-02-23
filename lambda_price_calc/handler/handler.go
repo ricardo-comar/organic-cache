@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"encoding/json"
 	"log"
 	"os"
 	"time"
@@ -12,6 +13,8 @@ import (
 	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
 	"github.com/aws/aws-sdk-go-v2/service/sqs"
+	"github.com/ricardo-comar/identity-provider/model"
+	"github.com/ricardo-comar/identity-provider/service"
 )
 
 var cfg aws.Config
@@ -57,6 +60,10 @@ func handleMessages(ctx context.Context, sqsEvent events.SQSEvent) error {
 func handleMessage(msg string) (interface{}, error) {
 
 	log.Printf("Processando mensagem: %s", msg)
+	user := model.UserEntity{}
+	json.Unmarshal([]byte(msg), &user)
+
+	service.GenerateUserPrices(&dyncli, &user)
 
 	return nil, nil
 

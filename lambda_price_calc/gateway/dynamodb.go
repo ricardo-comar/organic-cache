@@ -2,26 +2,70 @@ package gateway
 
 import (
 	"context"
-	"fmt"
 	"os"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/feature/dynamodb/attributevalue"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
+	"github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
 	"github.com/ricardo-comar/identity-provider/model"
 )
 
-func SaveActiveUser(svc dynamodb.Client, user model.UserEntity) error {
+func QueryUserDiscounts(dyncli *dynamodb.Client, user *model.UserEntity) (*model.DiscountEntity, error) {
 
-	fmt.Printf("Saving user %s", user)
-	item, err := attributevalue.MarshalMap(user)
+	output, err := dyncli.GetItem(context.TODO(), &dynamodb.GetItemInput{
+		TableName: aws.String(os.Getenv("USER_DISCOUNTS_TABLE")),
+		Key: map[string]types.AttributeValue{
+			"user_id": &types.AttributeValueMemberS{Value: user.ID},
+		},
+	})
+
+	discounts := model.DiscountEntity{}
+	if err == nil && output.Item != nil {
+		attributevalue.UnmarshalMap(output.Item, &discounts)
+	}
+
+	return &discounts, nil
+
+}
+
+func ScanProducts(dyncli *dynamodb.Client) (*[]model.ProductEntity, error) {
+
+	var totalProducts []model.ProductEntity
+
+	input := dynamodb.NewScanPaginator(dyncli, &dynamodb.ScanInput{
+		TableName: aws.String(os.Getenv("PRODUCTS_TABLE")),
+	})
+
+	for input.HasMorePages() {
+		out, err := input.NextPage(context.TODO())
+		if err != nil {
+			panic(err)
+		}
+
+		var products []model.ProductEntity
+		err = attributevalue.UnmarshalListOfMaps(out.Items, &products)
+		if err != nil {
+			panic(err)
+		}
+
+		totalProducts = append(totalProducts, products...)
+	}
+
+	return &totalProducts, nil
+}
+
+func SaveUserPrices(dyncli *dynamodb.Client, prices *model.UserPricesEntity) error {
+
+	item, err := attributevalue.MarshalMap(prices)
 
 	if err == nil {
-		_, err = svc.PutItem(context.TODO(), &dynamodb.PutItemInput{
-			TableName: aws.String(os.Getenv("ACTIVE_USERS_TABLE")),
+		_, err = dyncli.PutItem(context.TODO(), &dynamodb.PutItemInput{
+			TableName: aws.String(os.Getenv("USER_PRICES_TABLE")),
 			Item:      item,
 		})
 	}
 
 	return err
+
 }

@@ -34,3 +34,10 @@ func QueryProductPrice(cli dynamodb.Client, userId string) ([]model.ProductPrice
 	return products, nil
 
 }
+
+func SaveQuotation(cli dynamodb.Client, requestId string, products []model.ProductPrice) error {
+
+	return nil
+}
+
+// 	message.TTL = strconv.FormatInt(time.Now().Add(time.Minute*5).UnixNano(), 10)

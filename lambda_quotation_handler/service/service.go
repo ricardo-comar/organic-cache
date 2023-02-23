@@ -2,26 +2,45 @@ package service
 
 import (
 	"context"
-	"time"
 
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
-	"github.com/ricardo-comar/organic-cache/gateway"
+	"github.com/hazelcast/hazelcast-go-client"
 	"github.com/ricardo-comar/organic-cache/model"
 )
 
-func ResponseWait(ctx *context.Context, cli *dynamodb.Client, requestId string) (*model.ProductQuotation, error) {
+func ResponseWait(ctx *context.Context, cli *dynamodb.Client, requestId string) (*model.QuotationEntity, error) {
 
-	var quotation *model.ProductQuotation
+	var quotation model.QuotationEntity
 	var err error
 
-	for i := 0; i < 10; i++ {
-		quotation, err = gateway.QueryQuotation(cli, requestId)
-
-		if quotation == nil {
-			time.Sleep(time.Second)
-		}
+	// Init hazelcast client
+	config := hazelcast.Config{}
+	config.Cluster.Network.SetAddresses("localhost:5701")
+	client, err := hazelcast.StartNewClientWithConfig(*ctx, config)
+	if err != nil {
+		panic(err)
 	}
 
-	return quotation, err
+	// Get a reference to the queue.
+	myTopic, err := client.GetTopic(*ctx, "quotation-response-topic")
+	if err != nil {
+		panic(err)
+	}
+
+	// Add a message listener to the topic.
+	_, err = myTopic.AddMessageListener(*ctx, func(event *hazelcast.MessagePublished) {
+		msg := event.Value.(model.QuotationEntity)
+		if msg.Id == requestId {
+			quotation = msg
+		}
+	})
+	if err != nil {
+		panic(err)
+	}
+
+	// Shutdown the client.
+	client.Shutdown(*ctx)
+
+	return &quotation, err
 
 }

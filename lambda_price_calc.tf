@@ -17,6 +17,14 @@ resource "aws_lambda_function" "price_calc" {
   timeout          = 30
   depends_on       = [aws_iam_role_policy_attachment.attach_iam_policy_to_iam_role]
 
+  environment {
+    variables = {
+      PRODUCTS_TABLE = aws_dynamodb_table.products.name
+      USER_DISCOUNTS_TABLE = aws_dynamodb_table.user_discounts.name
+      USER_PRICES_TABLE = aws_dynamodb_table.user_prices.name
+    }
+  }
+
 }
 
 resource "aws_iam_role" "lambda_role_price_calc" {

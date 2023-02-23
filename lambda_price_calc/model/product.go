@@ -1,6 +1,7 @@
 package model
 
 type ProductEntity struct {
-	PriceId string  `dynamodbav:"id" json:"id"`
-	Value   float32 `dynamodbav:"value" json:"value"`
+	ProductId string  `dynamodbav:"id" json:"id"`
+	Name      string  `dynamodbav:"name" json:"name"`
+	Value     float32 `dynamodbav:"value" json:"value"`
 }

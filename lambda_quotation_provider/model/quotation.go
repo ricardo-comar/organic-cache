@@ -3,6 +3,7 @@ package model
 type QuotationEntity struct {
 	Id       string             `dynamodbav:"id" json:"id"`
 	Products []ProductQuotation `dynamodbav:"products" json:"products"`
+	TTL      string             `dynamodbav:"ttl" json:"ttl"`
 }
 
 type ProductQuotation struct {

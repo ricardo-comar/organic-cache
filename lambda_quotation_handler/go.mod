@@ -3,6 +3,7 @@ module github.com/ricardo-comar/organic-cache
 go 1.18
 
 require (
+	github.com/StackExchange/wmi v0.0.0-20190523213315-cbe66965904d // indirect
 	github.com/aws/aws-sdk-go-v2/credentials v1.12.21 // indirect
 	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.12.17 // indirect
 	github.com/aws/aws-sdk-go-v2/internal/configsources v1.1.29 // indirect
@@ -16,7 +17,13 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/ssooidc v1.13.6 // indirect
 	github.com/aws/aws-sdk-go-v2/service/sts v1.16.19 // indirect
 	github.com/aws/smithy-go v1.13.5 // indirect
+	github.com/go-ole/go-ole v1.2.4 // indirect
+	github.com/hazelcast/hazelcast-go-client v1.3.2 // indirect
 	github.com/jmespath/go-jmespath v0.4.0 // indirect
+	github.com/shirou/gopsutil/v3 v3.21.5 // indirect
+	github.com/tklauser/go-sysconf v0.3.4 // indirect
+	github.com/tklauser/numcpus v0.2.1 // indirect
+	golang.org/x/sys v0.0.0-20210217105451-b926d437f341 // indirect
 )
 
 require (

@@ -3,6 +3,7 @@ module github.com/ricardo-comar/identity-provider
 go 1.18
 
 require (
+	github.com/StackExchange/wmi v0.0.0-20190523213315-cbe66965904d // indirect
 	github.com/aws/aws-sdk-go-v2/credentials v1.12.23 // indirect
 	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.12.19 // indirect
 	github.com/aws/aws-sdk-go-v2/internal/configsources v1.1.28 // indirect
@@ -16,7 +17,12 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/ssooidc v1.13.8 // indirect
 	github.com/aws/aws-sdk-go-v2/service/sts v1.17.1 // indirect
 	github.com/aws/smithy-go v1.13.5 // indirect
+	github.com/go-ole/go-ole v1.2.4 // indirect
 	github.com/jmespath/go-jmespath v0.4.0 // indirect
+	github.com/shirou/gopsutil/v3 v3.21.5 // indirect
+	github.com/tklauser/go-sysconf v0.3.4 // indirect
+	github.com/tklauser/numcpus v0.2.1 // indirect
+	golang.org/x/sys v0.0.0-20210217105451-b926d437f341 // indirect
 )
 
 require (
@@ -27,4 +33,5 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/dynamodb v1.18.3
 	github.com/aws/aws-sdk-go-v2/service/sns v1.20.2
 	github.com/aws/aws-sdk-go-v2/service/sqs v1.20.2
+	github.com/hazelcast/hazelcast-go-client v1.3.2
 )

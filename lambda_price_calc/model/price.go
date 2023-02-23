@@ -1,9 +1,8 @@
 package model
 
 type UserPricesEntity struct {
-	PriceId string         `dynamodbav:"id" json:"id"`
-	UserId  string         `dynamodbav:"user_id" json:"user_id"`
-	Prices  []ProductPrice `dynamodbav:"products" json:"products"`
+	UserId string         `dynamodbav:"user_id" json:"user_id"`
+	Prices []ProductPrice `dynamodbav:"products" json:"products"`
 }
 
 type ProductPrice struct {

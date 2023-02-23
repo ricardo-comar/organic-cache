@@ -1,5 +1,10 @@
 version: '2.1'
 services:
+  hazelcast:
+    image: hazelcast/hazelcast:5.2.1
+    ports:
+    - "5701:5701"
+
   localstack:
     container_name: "organic-cache-localstack"
     image: localstack/localstack:1.4.0

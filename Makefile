@@ -36,12 +36,16 @@ localstack:
 # msg:
 # 	aws --endpoint http://localhost:4566 sqs send-message --queue-url http://localhost:4566/000000000000/organic-cache-sqs-employees --message-body "IOT-1 Temp: 51C"
 
+load:
+	aws --endpoint-url=http://localhost:4566 dynamodb batch-write-item --request-items file://dynamodb_user_discounts.json
+	aws --endpoint-url=http://localhost:4566 dynamodb batch-write-item --request-items file://dynamodb_products.json
+
 subscribe:
-	curl -v -X PUT http://localhost:4566/restapis/$(shell aws --endpoint-url=http://localhost:4566 apigateway get-rest-apis | jq -r '.items[0].id')/v1/\_user_request_/subscribe \
+	curl -X PUT http://localhost:4566/restapis/$(shell aws --endpoint-url=http://localhost:4566 apigateway get-rest-apis | jq -r '.items[0].id')/v1/\_user_request_/subscribe \
 	-H "Content-Type: application/json" \
-   -d '{"id": "ABC"}' | jq
+   -d '{"id": "$(ID)"}' | jq
 
 quotation:
-	curl -v -X POST http://localhost:4566/restapis/$(shell aws --endpoint-url=http://localhost:4566 apigateway get-rest-apis | jq -r '.items[0].id')/v1/\_user_request_/quotation \
+	curl -X POST http://localhost:4566/restapis/$(shell aws --endpoint-url=http://localhost:4566 apigateway get-rest-apis | jq -r '.items[0].id')/v1/\_user_request_/quotation \
 	-H "Content-Type: application/json" \
-   -d '{"id": "ABC" }' | jq
+   -d '{"id": "$(ID)" }' | jq

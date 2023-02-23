@@ -67,27 +67,49 @@ func handleMessage(ctx context.Context, msg events.SQSMessage) (interface{}, err
 	log.Printf("Processando mensagem: %+v", msg)
 	msgId := msg.MessageAttributes["RequestId"].StringValue
 
-	retries := "0"
-	if retryCount := msg.MessageAttributes["RetryCount"].StringValue; retryCount != nil {
-		rCount, _ := strconv.Atoi(*retryCount)
-		retries = strconv.Itoa(rCount + 1)
-		log.Printf("Retries: %v | %v | %v", *retryCount, rCount, retries)
-		if rCount >= 10 {
-			return nil, nil
-		}
-
-	}
-
 	var quotationRequest model.QuotationRequest
 	json.Unmarshal([]byte(msg.Body), &quotationRequest)
 
 	productPrices, err := gateway.QueryProductPrice(dyncli, quotationRequest.UserId)
+
 	if len(productPrices) == 0 {
+		retries := "0"
+		if retryCount := msg.MessageAttributes["RetryCount"].StringValue; retryCount != nil {
+			rCount, _ := strconv.Atoi(*retryCount)
+			retries = strconv.Itoa(rCount + 1)
+			log.Printf("Retries: %v | %v | %v", *retryCount, rCount, retries)
+			if rCount >= 10 {
+				return nil, nil
+			}
+
+		}
 
 		log.Print("Nenhuma cotação encontrada, postergando processamento")
 		gateway.RetryMessage(ctx, &sqscli, msgId, &retries, quotationRequest)
+
 	} else {
-		gateway.SendResponse(ctx, &snscli, msgId, productPrices)
+
+		quotationResponse := model.QuotationEntity{}
+		quotationResponse.Id = *msgId
+		quotationResponse.Products = []model.ProductQuotation{}
+
+		for _, product := range productPrices {
+			for _, req := range quotationRequest.ProductList {
+
+				if req.ProductId == product.ProductId {
+					quotationResponse.Products = append(quotationResponse.Products, model.ProductQuotation{
+						ProductId:     product.ProductId,
+						Quantity:      req.Quantity,
+						OriginalValue: product.OriginalValue,
+						Discount:      product.Discount,
+						FinalValue:    (product.Value * req.Quantity) * (product.Discount / 100),
+					})
+				}
+
+			}
+		}
+
+		gateway.SendResponse(&ctx, quotationResponse)
 	}
 
 	return nil, err

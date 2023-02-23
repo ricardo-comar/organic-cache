@@ -67,4 +67,10 @@ resource "aws_dynamodb_table" "quotations" {
     name = "id"
     type = "S"
   }
+
+  ttl {
+    enabled        = true
+    attribute_name = "ttl"
+  }
+
 }

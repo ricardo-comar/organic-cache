@@ -1,0 +1,49 @@
+{
+    "products": [
+        {
+            "PutRequest": {
+                "Item": {
+                    "id": {"S":"P01"},
+                    "name": {"S":"Product P01"},
+                    "value": {"N":"500.0"}
+                }
+            }
+        },
+        {
+            "PutRequest": {
+                "Item": {
+                    "id": {"S":"P02"},
+                    "name": {"S":"Product P02"},
+                    "value": {"N":"578.0"}
+                }
+            }
+        },
+        {
+            "PutRequest": {
+                "Item": {
+                    "id": {"S":"P03"},
+                    "name": {"S":"Product P03"},
+                    "value": {"N":"1029.0"}
+                }
+            }
+        },
+        {
+            "PutRequest": {
+                "Item": {
+                    "id": {"S":"P04"},
+                    "name": {"S":"Product P04"},
+                    "value": {"N":"145.0"}
+                }
+            }
+        },
+        {
+            "PutRequest": {
+                "Item": {
+                    "id": {"S":"P05"},
+                    "name": {"S":"Product P05"},
+                    "value": {"N":"10843.0"}
+                }
+            }
+        }
+    ]
+}
