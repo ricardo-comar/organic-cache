@@ -8,7 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/feature/dynamodb/attributevalue"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
-	"github.com/ricardo-comar/identity-provider/model"
+	"github.com/ricardo-comar/organic-cache/model"
 )
 
 func QueryUserDiscounts(dyncli *dynamodb.Client, user *model.UserEntity) (*model.DiscountEntity, error) {
@@ -40,13 +40,13 @@ func ScanProducts(dyncli *dynamodb.Client) (*[]model.ProductEntity, error) {
 	for input.HasMorePages() {
 		out, err := input.NextPage(context.TODO())
 		if err != nil {
-			panic(err)
+			return nil, err
 		}
 
 		var products []model.ProductEntity
 		err = attributevalue.UnmarshalListOfMaps(out.Items, &products)
 		if err != nil {
-			panic(err)
+			return nil, err
 		}
 
 		totalProducts = append(totalProducts, products...)

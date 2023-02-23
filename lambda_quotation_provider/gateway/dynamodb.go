@@ -8,36 +8,24 @@ import (
 	"github.com/aws/aws-sdk-go-v2/feature/dynamodb/attributevalue"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
-	"github.com/ricardo-comar/identity-provider/model"
+	"github.com/ricardo-comar/organic-cache/model"
 )
 
-func QueryProductPrice(cli dynamodb.Client, userId string) ([]model.ProductPrice, error) {
+func QueryProductPrice(cli dynamodb.Client, userId string) (*model.UserPricesEntity, error) {
 
-	items, err := cli.Query(context.TODO(), &dynamodb.QueryInput{
-		TableName:              aws.String(os.Getenv("USER_PRICES_TABLE")),
-		KeyConditionExpression: aws.String("user_id = :userKey"),
-		ExpressionAttributeValues: map[string]types.AttributeValue{
-			":userKey": &types.AttributeValueMemberS{Value: userId},
+	output, err := cli.GetItem(context.TODO(), &dynamodb.GetItemInput{
+		TableName: aws.String(os.Getenv("USER_PRICES_TABLE")),
+		Key: map[string]types.AttributeValue{
+			"user_id": &types.AttributeValueMemberS{Value: userId},
 		},
 	})
 
-	if err != nil {
-		panic(err)
+	if err == nil && output.Item != nil {
+		userPrices := model.UserPricesEntity{}
+		err = attributevalue.UnmarshalMap(output.Item, &userPrices)
+		return &userPrices, err
 	}
 
-	var products []model.ProductPrice
-	err = attributevalue.UnmarshalListOfMaps(items.Items, &products)
-	if err != nil {
-		panic(err)
-	}
-
-	return products, nil
+	return nil, err
 
 }
-
-func SaveQuotation(cli dynamodb.Client, requestId string, products []model.ProductPrice) error {
-
-	return nil
-}
-
-// 	message.TTL = strconv.FormatInt(time.Now().Add(time.Minute*5).UnixNano(), 10)

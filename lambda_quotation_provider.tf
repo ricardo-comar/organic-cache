@@ -7,7 +7,7 @@ data "archive_file" "lambda_quotation_provider_zip" {
 // Function
 resource "aws_lambda_function" "quotation_provider" {
   filename         = data.archive_file.lambda_quotation_provider_zip.output_path
-  function_name    = "identity-provider-quotation-provider"
+  function_name    = "organic-cache-quotation-provider"
   description      = "DB Update Lambda"
   role             = aws_iam_role.lambda_role_quotation_provider.arn
   handler          = "lambda_quotation_provider"
@@ -20,7 +20,6 @@ resource "aws_lambda_function" "quotation_provider" {
   environment {
     variables = {
       USER_PRICES_TABLE = aws_dynamodb_table.user_prices.name
-
       QUOTATION_QUEUE = aws_sqs_queue.quotation_queue.url
       RESPONSE_TOPIC_ARN = aws_sns_topic.quotation_response.arn
     }

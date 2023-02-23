@@ -1,12 +1,11 @@
 package service
 
 import (
-	"fmt"
 	"log"
 
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
-	"github.com/ricardo-comar/identity-provider/gateway"
-	"github.com/ricardo-comar/identity-provider/model"
+	"github.com/ricardo-comar/organic-cache/gateway"
+	"github.com/ricardo-comar/organic-cache/model"
 )
 
 func GenerateUserPrices(dyncli *dynamodb.Client, user *model.UserEntity) error {
@@ -16,14 +15,14 @@ func GenerateUserPrices(dyncli *dynamodb.Client, user *model.UserEntity) error {
 		log.Fatal("Error scanning products :", err)
 		return err
 	}
-	fmt.Printf("Products: %+v\n", products)
+	log.Printf("Products: %+v\n", products)
 
 	userDiscounts, err := gateway.QueryUserDiscounts(dyncli, user)
 	if err != nil {
 		log.Fatal("Error quering user discounts :", err)
 		return err
 	}
-	fmt.Printf("User discounts: %+v\n", userDiscounts)
+	log.Printf("User discounts: %+v\n", userDiscounts)
 
 	prices := model.UserPricesEntity{
 		UserId: user.ID,
@@ -52,7 +51,7 @@ func GenerateUserPrices(dyncli *dynamodb.Client, user *model.UserEntity) error {
 		})
 	}
 
-	fmt.Printf("User prices: %+v\n", prices)
+	log.Printf("User prices: %+v\n", prices)
 
 	gateway.SaveUserPrices(dyncli, &prices)
 	if err != nil {

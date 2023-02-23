@@ -1,4 +1,4 @@
-module github.com/ricardo-comar/identity-provider
+module github.com/ricardo-comar/organic-cache
 
 go 1.18
 

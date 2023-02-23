@@ -2,7 +2,7 @@ package gateway
 
 import (
 	"context"
-	"fmt"
+	"log"
 	"os"
 
 	"github.com/ricardo-comar/organic-cache/model"
@@ -14,7 +14,7 @@ import (
 
 func SaveActiveUser(cli *dynamodb.Client, user model.UserEntity) error {
 
-	fmt.Printf("Saving user %s", user)
+	log.Printf("Saving user %s", user)
 	item, err := attributevalue.MarshalMap(user)
 
 	if err == nil {

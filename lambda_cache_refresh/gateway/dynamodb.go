@@ -22,13 +22,13 @@ func QueryUsers(cli *dynamodb.Client) ([]model.UserEntity, error) {
 	for input.HasMorePages() {
 		out, err := input.NextPage(context.TODO())
 		if err != nil {
-			panic(err)
+			return nil, err
 		}
 
 		var users []model.UserEntity
 		err = attributevalue.UnmarshalListOfMaps(out.Items, &users)
 		if err != nil {
-			panic(err)
+			return nil, err
 		}
 
 		totalUsers = append(totalUsers, users...)

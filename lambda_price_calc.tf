@@ -7,7 +7,7 @@ data "archive_file" "lambda_price_calc_zip" {
 // Function
 resource "aws_lambda_function" "price_calc" {
   filename         = data.archive_file.lambda_price_calc_zip.output_path
-  function_name    = "identity-provider-price-calc"
+  function_name    = "organic-cache-price-calc"
   description      = "DB Update Lambda"
   role             = aws_iam_role.lambda_role_price_calc.arn
   handler          = "lambda_price_calc"
