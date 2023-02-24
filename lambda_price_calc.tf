@@ -106,9 +106,26 @@ resource "aws_iam_role_policy_attachment" "attach_iam_policy_to_iam_role" {
 }
 
 # Event source from SQS
-resource "aws_lambda_event_source_mapping" "price_calc_event_source_mapping" {
+resource "aws_lambda_event_source_mapping" "refresh_queue_event_source_mapping" {
   event_source_arn = aws_sqs_queue.refresh_queue.arn
   enabled          = true
   function_name    = aws_lambda_function.price_calc.arn
   batch_size       = 10
 }
+
+# Event source from SQS
+resource "aws_lambda_event_source_mapping" "recalc_queue_event_source_mapping" {
+  event_source_arn = aws_sqs_queue.recalc_queue.arn
+  enabled          = true
+  function_name    = aws_lambda_function.price_calc.arn
+  batch_size       = 1
+}
+
+# Event source from Quotation Provider
+# resource "aws_lambda_permission" "price_calc_allow_quotation_provider" {
+#   statement_id  = "AllowExecutionFromLambda"
+#   action        = "lambda:InvokeFunction"
+#   function_name = "${aws_lambda_function.price_calc.arn}"
+#   principal     = "events.amazonaws.com"
+#   source_arn    = "${aws_lambda_function.quotation_provider.arn}"
+# }

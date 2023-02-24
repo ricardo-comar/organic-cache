@@ -40,31 +40,9 @@ func main() {
 	lambda.Start(handleRequest)
 }
 
-type MyEvent struct {
-	Records []MyEventRecord `json:"Records"`
+func handleRequest(ctx context.Context, request events.APIGatewayProxyRequest) (events.APIGatewayProxyResponse, error) {
 
-	HTTPMethod string `json:"httpMethod"`
-	Body       string `json:"body"`
-}
-
-type MyEventRecord struct {
-	SNS MyEntity `json:"Sns"`
-}
-
-type MyEntity struct {
-	Message string `json:"Message"`
-}
-
-func handleRequest(ctx context.Context, request MyEvent) (events.APIGatewayProxyResponse, error) {
-
-	var body string
-	if len(request.Records) > 0 {
-		body = request.Records[0].SNS.Message
-	} else {
-		body = request.Body
-	}
-
-	entity, err := service.CreateEntity(body)
+	entity, err := service.CreateEntity(request.Body)
 	if err != nil {
 		log.Println("Invalid content: ", request.Body)
 		return events.APIGatewayProxyResponse{StatusCode: http.StatusBadRequest}, err

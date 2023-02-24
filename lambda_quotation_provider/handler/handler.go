@@ -9,11 +9,11 @@ import (
 	"time"
 
 	"github.com/aws/aws-lambda-go/events"
-	"github.com/aws/aws-lambda-go/lambda"
+	inv "github.com/aws/aws-lambda-go/lambda"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
-	"github.com/aws/aws-sdk-go-v2/service/sns"
+	"github.com/aws/aws-sdk-go-v2/service/lambda"
 	"github.com/aws/aws-sdk-go-v2/service/sqs"
 	"github.com/ricardo-comar/organic-cache/gateway"
 	"github.com/ricardo-comar/organic-cache/model"
@@ -22,7 +22,7 @@ import (
 var cfg aws.Config
 var dyncli dynamodb.Client
 var sqscli sqs.Client
-var snscli sns.Client
+var lamcli lambda.Client
 
 func init() {
 	cfg, _ = config.LoadDefaultConfig(context.TODO(), func(o *config.LoadOptions) error {
@@ -32,18 +32,19 @@ func init() {
 
 	dyncli = *dynamodb.NewFromConfig(cfg)
 	sqscli = *sqs.NewFromConfig(cfg)
-	snscli = *sns.NewFromConfig(cfg)
+	lamcli = *lambda.NewFromConfig(cfg)
 
 	localendpoint, found := os.LookupEnv("LOCALSTACK_HOSTNAME")
 	if found {
-		dyncli = *dynamodb.NewFromConfig(cfg, dynamodb.WithEndpointResolver(dynamodb.EndpointResolverFromURL("http://"+localendpoint+":4566")))
-		sqscli = *sqs.New(sqs.Options{Credentials: cfg.Credentials, EndpointResolver: sqs.EndpointResolverFromURL("http://" + localendpoint + ":" + os.Getenv("EDGE_PORT"))})
-		snscli = *sns.New(sns.Options{Credentials: cfg.Credentials, EndpointResolver: sns.EndpointResolverFromURL("http://" + localendpoint + ":" + os.Getenv("EDGE_PORT"))})
+		localhost := "http://" + localendpoint + ":" + os.Getenv("EDGE_PORT")
+		dyncli = *dynamodb.NewFromConfig(cfg, dynamodb.WithEndpointResolver(dynamodb.EndpointResolverFromURL(localhost)))
+		sqscli = *sqs.New(sqs.Options{Credentials: cfg.Credentials, EndpointResolver: sqs.EndpointResolverFromURL(localhost)})
+		lamcli = *lambda.New(lambda.Options{Credentials: cfg.Credentials, EndpointResolver: lambda.EndpointResolverFromURL(localhost)})
 	}
 }
 
 func main() {
-	lambda.Start(handleMessages)
+	inv.Start(handleMessages)
 }
 
 func handleMessages(ctx context.Context, sqsEvent events.SQSEvent) error {
@@ -80,7 +81,10 @@ func handleMessage(ctx context.Context, msg events.SQSMessage) error {
 	}
 
 	if productPrices == nil {
-		retries := "0"
+
+		log.Println("Nenhuma cotação encontrada, postergando processamento")
+
+		retries := "1"
 		if retryCount := msg.MessageAttributes["RetryCount"].StringValue; retryCount != nil {
 			rCount, _ := strconv.Atoi(*retryCount)
 			retries = strconv.Itoa(rCount + 1)
@@ -89,9 +93,12 @@ func handleMessage(ctx context.Context, msg events.SQSMessage) error {
 				return nil
 			}
 
+		} else {
+			log.Println("Solicitando cálculo de preços")
+			gateway.RecalcMessage(ctx, &sqscli, quotationRequest.UserId)
 		}
 
-		log.Print("Nenhuma cotação encontrada, postergando processamento")
+		time.Sleep(time.Second)
 		gateway.RetryMessage(ctx, &sqscli, msgId, &retries, quotationRequest)
 
 	} else {

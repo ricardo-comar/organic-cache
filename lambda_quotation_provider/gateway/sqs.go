@@ -13,8 +13,6 @@ import (
 
 func RetryMessage(ctx context.Context, cli *sqs.Client, msgId *string, retryCount *string, message interface{}) (*string, error) {
 
-	log.Printf("RetryCount: %v | %v", retryCount, *retryCount)
-
 	body, _ := json.Marshal(message)
 	res, err := cli.SendMessage(ctx, &sqs.SendMessageInput{
 		MessageAttributes: map[string]types.MessageAttributeValue{
@@ -29,6 +27,24 @@ func RetryMessage(ctx context.Context, cli *sqs.Client, msgId *string, retryCoun
 		},
 		MessageBody: aws.String(string(body)),
 		QueueUrl:    aws.String(os.Getenv("QUOTATION_QUEUE")),
+	})
+
+	if err != nil {
+		log.Fatal(err)
+		return nil, err
+	}
+
+	return res.MessageId, nil
+}
+func RecalcMessage(ctx context.Context, cli *sqs.Client, userId string) (*string, error) {
+
+	payload, err := json.Marshal(map[string]interface{}{
+		"id": userId,
+	})
+
+	res, err := cli.SendMessage(ctx, &sqs.SendMessageInput{
+		MessageBody: aws.String(string(payload)),
+		QueueUrl:    aws.String(os.Getenv("RECALC_QUEUE")),
 	})
 
 	if err != nil {

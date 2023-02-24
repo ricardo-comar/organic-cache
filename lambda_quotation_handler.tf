@@ -15,13 +15,11 @@ resource "aws_lambda_function" "quotation_handler" {
   runtime          = "go1.x"
   memory_size      = 1024
   timeout          = 30
-  depends_on       = [aws_iam_role_policy_attachment.attach_iam_policy_to_iam_role_quotation_handler, aws_sns_topic.user_subscriber]
+  depends_on       = [aws_iam_role_policy_attachment.attach_iam_policy_to_iam_role_quotation_handler]
 
   environment {
     variables = {
-      USER_SUBSCRIBE_TOPIC = aws_sns_topic.user_subscriber.arn
       QUOTATION_QUEUE = aws_sqs_queue.quotation_queue.url
-      QUOTATION_TABLE = aws_dynamodb_table.quotations.name
     }
   }
 

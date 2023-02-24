@@ -6,34 +6,21 @@ import (
 	"log"
 	"time"
 
-	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
 	"github.com/hazelcast/hazelcast-go-client"
+	"github.com/ricardo-comar/organic-cache/gateway"
 	"github.com/ricardo-comar/organic-cache/model"
 )
 
-func ResponseWait(ctx *context.Context, cli *dynamodb.Client, requestId string) (*model.QuotationEntity, error) {
+func ResponseWait(ctx *context.Context, requestId string) (*model.QuotationEntity, error) {
 
 	var quotation *model.QuotationEntity
 	var err error
-
-	// Init hazelcast client
-	config := hazelcast.Config{}
-	config.Cluster.Network.SetAddresses("hazelcast:5701")
-	client, err := hazelcast.StartNewClientWithConfig(*ctx, config)
-	if err != nil {
-		return nil, err
-	}
-
-	// Get a reference to the queue.
-	myTopic, err := client.GetTopic(*ctx, "quotation-response-topic")
-	if err != nil {
-		return nil, err
-	}
+	topic, err := gateway.HazelcastTopic(ctx)
 
 	done := make(chan bool, 1)
 
 	// Add a message listener to the topic.
-	_, err = myTopic.AddMessageListener(*ctx, func(event *hazelcast.MessagePublished) {
+	_, err = topic.AddMessageListener(*ctx, func(event *hazelcast.MessagePublished) {
 		log.Printf("**** Message received: %+v", string(event.Value.([]byte)[:]))
 
 		msg := model.QuotationEntity{}
@@ -52,9 +39,6 @@ func ResponseWait(ctx *context.Context, cli *dynamodb.Client, requestId string) 
 	}()
 
 	<-done
-
-	// Shutdown the client.
-	client.Shutdown(*ctx)
 
 	return quotation, err
 

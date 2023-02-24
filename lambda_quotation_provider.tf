@@ -21,6 +21,8 @@ resource "aws_lambda_function" "quotation_provider" {
     variables = {
       USER_PRICES_TABLE = aws_dynamodb_table.user_prices.name
       QUOTATION_QUEUE = aws_sqs_queue.quotation_queue.url
+      RECALC_QUEUE = aws_sqs_queue.recalc_queue.url
+      # PRICE_CALC_LAMBDA = aws_lambda_function.price_calc.arn
     }
   }
 
@@ -85,20 +87,8 @@ resource "aws_iam_policy" "iam_policy_for_lambda_quotation_provider" {
    },
    {
      "Action": [
-        "sns:Subscribe",
-        "sns:Receive"
-     ],
-     "Resource": "*",
-     "Effect": "Allow"
-   },
-   {
-     "Action": [
-        "dynamodb:Query",
-        "dynamodb:Scan",
-        "dynamodb:GetItem",
-        "dynamodb:UpdateItem",
-        "dynamodb:PutItem",
-        "dynamodb:UpdateItem"
+        "lambda:InvokeAsync",
+        "lambda:InvokeFunction"
      ],
      "Resource": "*",
      "Effect": "Allow"
