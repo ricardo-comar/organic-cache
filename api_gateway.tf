@@ -35,7 +35,7 @@ resource "aws_api_gateway_resource" "org_cache_subscribe" {
 resource "aws_api_gateway_method" "org_cache_subscribe_method" {
   rest_api_id   = aws_api_gateway_rest_api.org_cache_api.id
   resource_id   = aws_api_gateway_resource.org_cache_subscribe.id
-  http_method   = "PUT"
+  http_method   = "POST"
   authorization = "NONE"
 }
 

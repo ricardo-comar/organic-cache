@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"log"
 	"net/http"
 	"os"
 
@@ -39,19 +40,39 @@ func main() {
 	lambda.Start(handleRequest)
 }
 
-func handleRequest(ctx context.Context, request events.APIGatewayProxyRequest) (events.APIGatewayProxyResponse, error) {
+type MyEvent struct {
+	Records []MyEventRecord `json:"Records"`
 
-	if request.HTTPMethod != http.MethodPut {
-		return events.APIGatewayProxyResponse{Body: http.StatusText(http.StatusMethodNotAllowed), StatusCode: http.StatusMethodNotAllowed}, nil
+	HTTPMethod string `json:"httpMethod"`
+	Body       string `json:"body"`
+}
+
+type MyEventRecord struct {
+	SNS MyEntity `json:"Sns"`
+}
+
+type MyEntity struct {
+	Message string `json:"Message"`
+}
+
+func handleRequest(ctx context.Context, request MyEvent) (events.APIGatewayProxyResponse, error) {
+
+	var body string
+	if len(request.Records) > 0 {
+		body = request.Records[0].SNS.Message
+	} else {
+		body = request.Body
 	}
 
-	entity, err := service.CreateEntity(request.Body)
+	entity, err := service.CreateEntity(body)
 	if err != nil {
+		log.Println("Invalid content: ", request.Body)
 		return events.APIGatewayProxyResponse{StatusCode: http.StatusBadRequest}, err
 	}
 
 	err = gateway.SaveActiveUser(&dyncli, entity)
 	if err != nil {
+		log.Println("Error saving subscription: ", err)
 		return events.APIGatewayProxyResponse{StatusCode: http.StatusInternalServerError}, err
 	}
 
