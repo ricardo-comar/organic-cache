@@ -1,5 +1,6 @@
 # Organic Cache
-Proof of Concept for a organic cache in AWS
+Proof of Concept for a organic cache in AWS, offering a price quotation API that responds immediately when the price table is already available, and if not calculates on demand and saves the user ID to periodically recalculate and allows to be available on time.
+If the user stops to consume the API after a pre determined time, that price table stops to be recalculated periodically, saving processing time.
 
 ## Solution Diagram
 ***
@@ -8,7 +9,6 @@ Proof of Concept for a organic cache in AWS
 
 
 ## Usage Scenarions
-***
 ### User Subscription
 1. On user first access, on calling ***Subscribe User PUT***, it's unique ID is registred on DynamoDB **Active Users** to be recalculated regurlaly, and a TTL (time-to-live) attribute.
 1. If the result record stills un-updated until the TTL expires, it's automaticaly removed by DynamoDB and user price table will no longer be recalculated regurlaly.
@@ -32,5 +32,4 @@ Proof of Concept for a organic cache in AWS
 1. If the price table is somewhen available, it's returned (as explained before) to the user. If not, Lambda **Quotation Handler** after 10s stop waiting and returns an HTTP 408 Timeout. 
 
 ## Conclusion
-***
 This project is for educational purpuse only, used to learn more about AWS and GoLang features (like parallel programming and circuit breaker strategy).
