@@ -10,6 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/feature/dynamodb/attributevalue"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
+	"github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
 )
 
 func SaveActiveUser(cli *dynamodb.Client, user model.UserEntity) error {
@@ -25,4 +26,23 @@ func SaveActiveUser(cli *dynamodb.Client, user model.UserEntity) error {
 	}
 
 	return err
+}
+
+func QuerySubscription(cli *dynamodb.Client, userId string) (*model.UserEntity, error) {
+
+	output, err := cli.GetItem(context.TODO(), &dynamodb.GetItemInput{
+		TableName: aws.String(os.Getenv("ACTIVE_USERS_TABLE")),
+		Key: map[string]types.AttributeValue{
+			"id": &types.AttributeValueMemberS{Value: userId},
+		},
+	})
+
+	if err == nil && output.Item != nil {
+		userSub := model.UserEntity{}
+		err = attributevalue.UnmarshalMap(output.Item, &userSub)
+		return &userSub, err
+	}
+
+	return nil, err
+
 }

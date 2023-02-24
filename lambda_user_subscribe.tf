@@ -20,6 +20,7 @@ resource "aws_lambda_function" "user_subscribe" {
   environment {
     variables = {
       ACTIVE_USERS_TABLE = aws_dynamodb_table.active_users.name
+      REFRESH_QUEUE = aws_sqs_queue.refresh_queue.url
     }
   }
 
@@ -74,8 +75,7 @@ resource "aws_iam_policy" "iam_policy_for_lambda_user_subscribe" {
    },
    {
      "Action": [
-        "sqs:ReceiveMessage",
-        "sqs:DeleteMessage",
+        "sqs:SendMessage",
         "sqs:GetQueueAttributes"
      ],
      "Resource": "*",
@@ -83,6 +83,7 @@ resource "aws_iam_policy" "iam_policy_for_lambda_user_subscribe" {
    },
    {
      "Action": [
+        "dynamodb:GetItem",
         "dynamodb:PutItem"
      ],
      "Resource": "*",

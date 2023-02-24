@@ -3,8 +3,10 @@ package main
 import (
 	"context"
 	"log"
-	"net/http"
 	"os"
+	"time"
+
+	"github.com/ricardo-comar/organic-cache/gateway"
 
 	"github.com/aws/aws-lambda-go/events"
 	"github.com/aws/aws-lambda-go/lambda"
@@ -12,8 +14,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
 	"github.com/aws/aws-sdk-go-v2/service/sqs"
-	"github.com/ricardo-comar/organic-cache/gateway"
-	"github.com/ricardo-comar/organic-cache/service"
 )
 
 var cfg aws.Config
@@ -37,29 +37,24 @@ func init() {
 }
 
 func main() {
-	lambda.Start(handleRequest)
+	lambda.Start(eventHandler)
 }
 
-func handleRequest(ctx context.Context, request events.APIGatewayProxyRequest) (events.APIGatewayProxyResponse, error) {
+func eventHandler(ctx context.Context, event events.CloudWatchEvent) (events.CloudWatchEvent, error) {
 
-	entity, err := service.CreateEntity(request.Body)
-	if err != nil {
-		log.Println("Invalid content: ", request.Body)
-		return events.APIGatewayProxyResponse{StatusCode: http.StatusBadRequest}, err
+	log.Printf("Iniciando busca por usuários subscritos")
+	inicio := time.Now()
+
+	users, error := gateway.QueryUsers(&dyncli)
+	log.Printf("%d usuários encontrados", len(users))
+
+	for _, user := range users {
+		msgId, _ := gateway.SendMessage(ctx, &sqscli, user)
+		log.Printf("Usuário %s enviado: %s", user.ID, *msgId)
 	}
 
-	userSub, err := gateway.QuerySubscription(&dyncli, entity.ID)
-	if err == nil && userSub == nil {
-		log.Println("New subscription, asking for price recalculation: ", entity.ID)
-		gateway.SendMessage(ctx, &sqscli, userSub)
-	}
+	log.Printf("Finalizando com %d usuários em %dms", len(users), time.Now().Sub(inicio).Milliseconds())
 
-	err = gateway.SaveActiveUser(&dyncli, entity)
-	if err != nil {
-		log.Println("Error saving subscription: ", err)
-		return events.APIGatewayProxyResponse{StatusCode: http.StatusInternalServerError}, err
-	}
-
-	return events.APIGatewayProxyResponse{StatusCode: http.StatusCreated}, err
+	return event, error
 
 }
