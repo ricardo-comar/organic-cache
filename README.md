@@ -7,16 +7,6 @@ If the user stops to consume the API after a pre determined time, that price tab
 [Source](https://app.cloudcraft.co/view/c11241e7-f79b-42b3-b008-85ca557f501c?key=5618624e-2104-4aec-8a13-c1d94a20a96c)
 
 
-## Local setup
-### Installed programs:
-- Docker
-- Docker Compose
-- Go
-- Terraform
-- Terraform Local
-- AWS CLI
-
-
 ## Scenarions
 ### User Subscription
 1. On user first access, on calling ***Subscribe User PUT***, it's unique ID is registred on DynamoDB **Active Users** to be recalculated regurlaly, and a TTL (time-to-live) attribute.
@@ -39,6 +29,17 @@ If the user stops to consume the API after a pre determined time, that price tab
 1. The Lambda **Quotation Provider** queries for the corresponding prices table from the receiving user's ID. If it's not available, sends a message to the SQS **Recalculation Queue**, to be processed ASAP by the Lambda **Price Calc**, and put back the message on SQS **Quotation Queue** to be processed later.
 1. Next time the Lambda **Quotation Provider** receives the message, it queries for the corresponding prices table from the receiving user's ID. If it's not available, put back again the message on SQS **Quotation Queue**, but limited to 10 retries.
 1. If the price table is somewhen available, it's returned (as explained before) to the user. If not, Lambda **Quotation Handler** after 10s stop waiting and returns an HTTP 408 Timeout. 
+
+
+## Local setup
+### Installed programs:
+- Docker
+- Docker Compose
+- Go
+- Terraform
+- Terraform Local
+- AWS CLI
+
 
 ### Usage
 I recommend multiple terminals (like Ubuntu Terminator) to keep track of all running events
@@ -73,6 +74,12 @@ On Terminal 4 you will be able to notice the communication between Quotation Lam
 $ make quotation ID=BBB
 ```
 On Terminal 4 you will be able to notice the lack of a calculated price table, Lambda **Price Calc** will be triggered and the quotation will be answered after a longer time.
+
+#### TIP
+You can monitor a lambda individually by connecting into the corresponding docker process:
+```
+docker logs --follow $(docker ps -f name=price-calc -q)
+```
 
 ## Conclusion
 This project is for educational purpuse only, used to learn more about AWS and GoLang features (like parallel programming and circuit breaker strategy).
