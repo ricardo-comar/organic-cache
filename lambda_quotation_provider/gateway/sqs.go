@@ -43,8 +43,9 @@ func RecalcMessage(ctx context.Context, cli *sqs.Client, userId string) (*string
 	})
 
 	res, err := cli.SendMessage(ctx, &sqs.SendMessageInput{
-		MessageBody: aws.String(string(payload)),
-		QueueUrl:    aws.String(os.Getenv("RECALC_QUEUE")),
+		MessageBody:    aws.String(string(payload)),
+		QueueUrl:       aws.String(os.Getenv("RECALC_QUEUE")),
+		MessageGroupId: aws.String("quotation"),
 	})
 
 	if err != nil {

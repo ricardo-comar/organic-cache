@@ -20,7 +20,7 @@ resource "aws_lambda_function" "user_subscribe" {
   environment {
     variables = {
       ACTIVE_USERS_TABLE = aws_dynamodb_table.active_users.name
-      REFRESH_QUEUE = aws_sqs_queue.refresh_queue.url
+      RECALC_QUEUE = aws_sqs_queue.price_recalc_queue.url
     }
   }
 

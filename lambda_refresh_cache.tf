@@ -20,7 +20,7 @@ resource "aws_lambda_function" "cache_refresh" {
   environment {
     variables = {
       ACTIVE_USERS_TABLE = aws_dynamodb_table.active_users.name
-      REFRESH_QUEUE = aws_sqs_queue.refresh_queue.url
+      RECALC_QUEUE = aws_sqs_queue.price_recalc_queue.url
     }
   }
 }
@@ -110,10 +110,10 @@ resource "aws_cloudwatch_event_target" "cache_refresh_lambda_target" {
   rule      = aws_cloudwatch_event_rule.cache_refresh_lambda_event_rule.name
 }
 
-resource "aws_lambda_permission" "allow_cloudwatch_to_call_cache_refresh_lambda" {
-  statement_id  = "AllowExecutionFromCloudWatch"
-  action        = "lambda:InvokeFunction"
-  function_name = aws_lambda_function.cache_refresh.function_name
-  principal     = "events.amazonaws.com"
-  source_arn    = aws_cloudwatch_event_rule.cache_refresh_lambda_event_rule.arn
-}
+# resource "aws_lambda_permission" "allow_cloudwatch_to_call_cache_refresh_lambda" {
+#   statement_id  = "AllowExecutionFromCloudWatch"
+#   action        = "lambda:InvokeFunction"
+#   function_name = aws_lambda_function.cache_refresh.function_name
+#   principal     = "events.amazonaws.com"
+#   source_arn    = aws_cloudwatch_event_rule.cache_refresh_lambda_event_rule.arn
+# }

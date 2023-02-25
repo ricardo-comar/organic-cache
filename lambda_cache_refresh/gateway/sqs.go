@@ -14,8 +14,9 @@ func SendMessage(ctx context.Context, cli *sqs.Client, message interface{}) (*st
 
 	body, _ := json.Marshal(message)
 	res, err := cli.SendMessage(ctx, &sqs.SendMessageInput{
-		MessageBody: aws.String(string(body)),
-		QueueUrl:    aws.String(os.Getenv("REFRESH_QUEUE")),
+		MessageBody:    aws.String(string(body)),
+		QueueUrl:       aws.String(os.Getenv("RECALC_QUEUE")),
+		MessageGroupId: aws.String("price-refresh"),
 	})
 
 	if err != nil {
