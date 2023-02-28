@@ -55,6 +55,12 @@ $ docker-compose up
 $ make package 
 $ tflocal init
 $ tflocal apply --auto-approve
+```
+Keep this terminal on sight, copy the output ***url_quotation*** value to be used a few moments later... 
+
+And load the prices and user discounts into DynamoDB:
+
+```
 $ make load
 ```
 
@@ -64,16 +70,18 @@ $ make subscribe ID=AAA
 ```
 Now eyes on Terminal 1.... A few moments later Lambda **Refresh Cache** will be triggered and you be able to notice the user AAA price table be calculated.
 
-#### Terminal 4 - quotation
-```
-$ make quotation ID=AAA
-```
-On Terminal 4 you will be able to notice the communication between Quotation Lambda's, and the quotation will be answered shortly.
+#### Browser - Quotation
 
-```
-$ make quotation ID=BBB
-```
-On Terminal 4 you will be able to notice the lack of a calculated price table, Lambda **Price Calc** will be triggered and the quotation will be answered after a longer time.
+Open the file [](doc/index.html), open DevTools (F12) and switch to Console view.
+
+Click on Setup and paste the ***url_quotation*** value into input box, and Click on Close. You should see a message "*opened*" on console view.
+
+Sometimes after 60s you will see also a "pong!" message there... Don't mind, it's the javascript making the websocket active :smile:
+
+On *Client ID* input, you can use any string (like Foo) and on console you will receive a first message "quotation under analisys", and right after another response with 3 products.
+
+If you use AAA or BBB as *Client ID*, some products will be answered with a discount, present in [](dynamodb_user_discounts.json). You can modify to test different results, loading the data on Terminal 2 again.
+
 
 #### TIP
 You can monitor a lambda individually by connecting into the corresponding docker process:
