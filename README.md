@@ -18,17 +18,14 @@ If the user stops to consume the API after a pre determined time, that price tab
 1. For each message on SQS **Refresh Queue**, Lambda **Price Calc** scan for all DynamoDB **Products** and query for user's DynamoDB **Discounts´**, calculating user's price table (with original and final prices) and saving into DybanoDB **Prices by User**. 
 
 ### Quotation Available
-1. To request a quotation, the user can call the ***Quotation POST***, sending his ID and a list of products IDs and quantities. 
-1. The Lambda **Quotation Handler** sends a message to SQS **Quotation Queue** with the quotation data, and waits for a available response in Elasticache (for education purposes, I used Hazelcast instead, because of it's cabapility of working together with localstack in docker-compose, and it's funcionality of topic Pub/Sub) 
-1. The Lambda **Quotation Provider** queries for the corresponding prices table from the receiving user's ID. Using the user's price table and products final prices and expected quantities, generates the quotation and put into Elasticache.
-1. Lambda **Quotation Handler** that's waiting for the response, receives the quotation and returns to the user.
+1. To request a quotation, the user can call the ***Quotation Websocket***, sending his ID and a list of products IDs and quantities. You can test it localy, as described below. 
+1. The Lambda **Quotation Handler** saves the quotation data into DybamoDB **Quotations** and sends a message to SNS **Quotations Topic** with the quotation data, and returns a message *quotation under analisys*. 
+1. The Lambda **Quotation Provider** is notified by SNS and, queries for the corresponding prices table from the receiving user's ID in DynamoDB **Prices by User**. 
+1. Using the user's price table and products final prices and expected quantities, generates the quotation and notifies the client by it's *ConnectionID*, using API Gateway response channel.
 
 ### Quotation Unavailable
-1. To request a quotation, the user can call the ***Quotation POST***, sending his ID and a list of products IDs and quantities. 
-1. The Lambda **Quotation Handler** sends a message to SQS **Quotation Queue** with the quotation data, and waits for a available response in Elasticache (for education purposes, I used Hazelcast instead, because of it's cabapility of working together with localstack in docker-compose, and it's funcionality of topic Pub/Sub) 
-1. The Lambda **Quotation Provider** queries for the corresponding prices table from the receiving user's ID. If it's not available, sends a message to the SQS **Recalculation Queue**, to be processed ASAP by the Lambda **Price Calc**, and put back the message on SQS **Quotation Queue** to be processed later.
-1. Next time the Lambda **Quotation Provider** receives the message, it queries for the corresponding prices table from the receiving user's ID. If it's not available, put back again the message on SQS **Quotation Queue**, but limited to 10 retries.
-1. If the price table is somewhen available, it's returned (as explained before) to the user. If not, Lambda **Quotation Handler** after 10s stop waiting and returns an HTTP 408 Timeout. 
+1. As described before, if Lambda **Quotation Provider** cannot find the user price table, it sends a message to SQS **Quotation Queue** with a different **group id**, to be processed before the refresh messages :sunglasses:.
+1. When Lambda **Price Calc** receives that message with a **RequestId** attribute, after price calculation it sends a message to SNS **Quotations Topic**, to Lambda **Quotation Provider** run again and be able to reply the quotation response.
 
 
 ## Local setup
@@ -82,7 +79,7 @@ Now eyes on Terminal 1.... A few moments later Lambda **Refresh Cache** will be 
 
 #### Browser - Quotation
 
-Open the file [index.html](doc/index.html), open DevTools (F12) and switch to Console view.
+Open the file [test_page.html](test_page.html), open DevTools (F12) and switch to Console view.
 
 Click on Setup and paste the ***url_quotation*** value into input box, and Click on Close. You should see a message "*opened*" on console view.
 
