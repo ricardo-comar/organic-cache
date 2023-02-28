@@ -24,7 +24,7 @@ If the user stops to consume the API after a pre determined time, that price tab
 1. Using the user's price table and products final prices and expected quantities, generates the quotation and notifies the client by it's *ConnectionID*, using API Gateway response channel.
 
 ### Quotation Unavailable
-1. As described before, if Lambda **Quotation Provider** cannot find the user price table, it sends a message to SQS **Quotation Queue** with a different **group id**, to be processed before the refresh messages :sunglasses:.
+1. As described before, if Lambda **Quotation Provider** cannot find the user price table, it sends a message to SQS **Quotation Queue** with a different **group id**, to be processed before the refresh messages :sunglasses: and finish processing.
 1. When Lambda **Price Calc** receives that message with a **RequestId** attribute, after price calculation it sends a message to SNS **Quotations Topic**, to Lambda **Quotation Provider** run again and be able to reply the quotation response.
 
 
