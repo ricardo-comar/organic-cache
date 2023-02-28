@@ -40,6 +40,12 @@ If the user stops to consume the API after a pre determined time, that price tab
 - Terraform Local
 - AWS CLI
 
+### IMPORTANT - Localstack Pro License
+
+Because of the recent necessity to modify the solution to communicate by websocket, the API Gateway must be created using resource [apigatewayv2](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/apigatewayv2_api), but in localstack it's only available in Pro Version.
+
+To be able to run localy, you can create an API Key in [](https://app.localstack.cloud/) valid for 15 days for free.
+
 
 ### Usage
 I recommend multiple terminals (like Ubuntu Terminator) to keep track of all running events
@@ -51,15 +57,19 @@ $ docker-compose up
 ```
 
 #### Terminal 2 - terraform
+
+First, check if the service is running by calling the health endpoint:
 ```
-$ make package 
-$ tflocal init
-$ tflocal apply --auto-approve
+curl http://localhost:4566/_localstack/health | jq
+```
+
+Now you can deploy everything :metal:
+```
+$ make deploy
 ```
 Keep this terminal on sight, copy the output ***url_quotation*** value to be used a few moments later... 
 
 And load the prices and user discounts into DynamoDB:
-
 ```
 $ make load
 ```
@@ -80,7 +90,7 @@ Sometimes after 60s you will see also a "pong!" message there... Don't mind, it'
 
 On *Client ID* input, you can use any string (like Foo) and on console you will receive a first message "quotation under analisys", and right after another response with 3 products.
 
-If you use AAA or BBB as *Client ID*, some products will be answered with a discount, present in [](dynamodb_user_discounts.json). You can modify to test different results, loading the data on Terminal 2 again.
+If you use AAA or BBB as *Client ID*, some products will be answered with a discount, present in [](localstack/dynamodb_user_discounts.json). You can modify to test different results, loading the data on Terminal 2 again.
 
 
 #### TIP
