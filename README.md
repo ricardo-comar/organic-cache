@@ -44,7 +44,7 @@ If the user stops to consume the API after a pre determined time, that price tab
 
 Because of the recent necessity to modify the solution to communicate by websocket, the API Gateway must be created using resource [apigatewayv2](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/apigatewayv2_api), but in localstack it's only available in Pro Version.
 
-To be able to run localy, you can create an API Key in [](https://app.localstack.cloud/) valid for 15 days for free.
+To be able to run localy, you can create an API Key in (https://app.localstack.cloud/) valid for 15 days for free.
 
 
 ### Usage
@@ -82,7 +82,7 @@ Now eyes on Terminal 1.... A few moments later Lambda **Refresh Cache** will be 
 
 #### Browser - Quotation
 
-Open the file [](doc/index.html), open DevTools (F12) and switch to Console view.
+Open the file [index.html](doc/index.html), open DevTools (F12) and switch to Console view.
 
 Click on Setup and paste the ***url_quotation*** value into input box, and Click on Close. You should see a message "*opened*" on console view.
 
@@ -90,7 +90,7 @@ Sometimes after 60s you will see also a "pong!" message there... Don't mind, it'
 
 On *Client ID* input, you can use any string (like Foo) and on console you will receive a first message "quotation under analisys", and right after another response with 3 products.
 
-If you use AAA or BBB as *Client ID*, some products will be answered with a discount, present in [](localstack/dynamodb_user_discounts.json). You can modify to test different results, loading the data on Terminal 2 again.
+If you use AAA or BBB as *Client ID*, some products will be answered with a discount, present in [user_discounts.json](localstack/dynamodb_user_discounts.json). You can modify to test different results, loading the data on Terminal 2 again.
 
 
 #### TIP
