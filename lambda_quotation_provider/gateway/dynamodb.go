@@ -29,3 +29,22 @@ func QueryProductPrice(cli dynamodb.Client, userId string) (*model.UserPricesEnt
 	return nil, err
 
 }
+
+func QueryRequest(cli dynamodb.Client, requestId string) (*model.QuotationRequest, error) {
+
+	output, err := cli.GetItem(context.TODO(), &dynamodb.GetItemInput{
+		TableName: aws.String(os.Getenv("QUOTATIONS_TABLE")),
+		Key: map[string]types.AttributeValue{
+			"request_id": &types.AttributeValueMemberS{Value: requestId},
+		},
+	})
+
+	if err == nil && output.Item != nil {
+		request := model.QuotationRequest{}
+		err = attributevalue.UnmarshalMap(output.Item, &request)
+		return &request, err
+	}
+
+	return nil, err
+
+}

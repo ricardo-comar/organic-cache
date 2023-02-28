@@ -3,10 +3,10 @@ resource "aws_dynamodb_table" "active_users" {
   billing_mode   = "PROVISIONED"
   read_capacity  = "2"
   write_capacity = "1"
-  hash_key       = "id"
+  hash_key       = "user_id"
 
   attribute {
-    name = "id"
+    name = "user_id"
     type = "S"
   }
 
@@ -61,10 +61,10 @@ resource "aws_dynamodb_table" "quotations" {
   billing_mode   = "PROVISIONED"
   read_capacity  = "2"
   write_capacity = "1"
-  hash_key       = "id"
+  hash_key       = "request_id"
  
   attribute {
-    name = "id"
+    name = "request_id"
     type = "S"
   }
 

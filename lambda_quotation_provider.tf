@@ -20,9 +20,9 @@ resource "aws_lambda_function" "quotation_provider" {
   environment {
     variables = {
       USER_PRICES_TABLE = aws_dynamodb_table.user_prices.name
-      QUOTATION_QUEUE = aws_sqs_queue.quotation_queue.url
       RECALC_QUEUE = aws_sqs_queue.price_recalc_queue.url
-      # PRICE_CALC_LAMBDA = aws_lambda_function.price_calc.arn
+      QUOTATIONS_TABLE = aws_dynamodb_table.quotations.name
+      # API_PATH = aws_apigatewayv2_route.ws_quotation_api_default_route.api
     }
   }
 
@@ -87,9 +87,8 @@ resource "aws_iam_policy" "iam_policy_for_lambda_quotation_provider" {
    },
    {
      "Action": [
-        "lambda:InvokeAsync",
-        "lambda:InvokeFunction"
-     ],
+        "execute-api:*"
+      ],
      "Resource": "*",
      "Effect": "Allow"
    }
@@ -101,12 +100,4 @@ EOF
 resource "aws_iam_role_policy_attachment" "attach_iam_policy_to_iam_role_provider" {
   role       = aws_iam_role.lambda_role_quotation_provider.name
   policy_arn = aws_iam_policy.iam_policy_for_lambda_quotation_provider.arn
-}
-
-# Event source from SQS
-resource "aws_lambda_event_source_mapping" "quotation_provider_event_source_mapping" {
-  event_source_arn = aws_sqs_queue.quotation_queue.arn
-  enabled          = true
-  function_name    = aws_lambda_function.quotation_provider.arn
-  batch_size       = 1
 }

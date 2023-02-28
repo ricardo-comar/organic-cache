@@ -50,7 +50,7 @@ func eventHandler(ctx context.Context, event events.CloudWatchEvent) (events.Clo
 
 	for _, user := range users {
 		msgId, _ := gateway.SendMessage(ctx, &sqscli, user)
-		log.Printf("Usuário %s enviado: %s", user.ID, *msgId)
+		log.Printf("Usuário %s enviado: %s", user.UserId, *msgId)
 	}
 
 	log.Printf("Finalizando com %d usuários em %dms", len(users), time.Now().Sub(inicio).Milliseconds())

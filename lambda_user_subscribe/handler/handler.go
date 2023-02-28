@@ -48,9 +48,9 @@ func handleRequest(ctx context.Context, request events.APIGatewayProxyRequest) (
 		return events.APIGatewayProxyResponse{StatusCode: http.StatusBadRequest}, err
 	}
 
-	userSub, err := gateway.QuerySubscription(&dyncli, entity.ID)
+	userSub, err := gateway.QuerySubscription(&dyncli, entity.UserId)
 	if err == nil && userSub == nil {
-		log.Println("New subscription, asking for price recalculation: ", entity.ID)
+		log.Println("New subscription, asking for price recalculation: ", entity.UserId)
 		gateway.SendMessage(ctx, &sqscli, userSub)
 	}
 

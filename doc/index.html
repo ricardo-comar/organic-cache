@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+</head>
+
+<body>
+    <dialog id="dialog">
+        <form method="dialog">
+            <label for="localUrl">Localstack URL</label>
+            <input type="text" id="localUrl" name="localUrl" />
+            <button type="submit">Close</button>
+        </form>
+      </dialog>
+
+
+    <button id="setup">Setup</button>
+    <br>
+    <p>
+        <label for="clientId">Client ID</label>
+        <input type="text" name="cliendId" />
+        <button id="sendMessage">Send Message</button>
+    </p>
+
+    <script>
+
+        document.getElementById('setup').onclick = () => {
+            document.getElementById('dialog').showModal();
+        }
+
+        document.getElementById('dialog').addEventListener('close', () => {
+            ws = new WebSocket(
+                document.getElementById('localUrl').value
+            );
+            ws.onopen = () => console.log('opened');
+            ws.onclose = () => console.log('closed');
+            ws.onmessage = (e) => console.log(e);
+
+            ws.onmessage = (event) => {
+             console.log(event.data);
+            }
+        });
+
+        setInterval(() => {
+            const message = {
+                action: 'PING',
+                payload: {},
+            };
+
+            ws.send(JSON.stringify(message));
+        }, 60000);
+
+        document.getElementById('sendMessage').onclick = () => {
+            const message = {
+                action: 'MESSAGE',
+                payload: {
+                    message: {
+                        id: document.getElementById('localUrl').value,
+                        products: 
+                        [ 
+                            {id: "P01", qtd: 19}, 
+                            {id: "P02", qtd: 30}, 
+                            {id: "P05", qtd: 10} ] 
+                    }
+                },
+            };
+
+            ws.send(JSON.stringify(message));
+        }
+
+    </script>
+</body>
+
+</html>

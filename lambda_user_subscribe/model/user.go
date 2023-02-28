@@ -2,6 +2,6 @@ package model
 
 //EmployeeRegistries slice
 type UserEntity struct {
-	ID  string `dynamodbav:"id" json:"id"`
-	TTL string `dynamodbav:"ttl" json:"ttl"`
+	UserId string `dynamodbav:"user_id" json:"user_id"`
+	TTL    string `dynamodbav:"ttl" json:"ttl"`
 }
