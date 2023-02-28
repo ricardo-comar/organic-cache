@@ -7,7 +7,7 @@ data "archive_file" "lambda_quotation_handler_zip" {
 // Function
 resource "aws_lambda_function" "quotation_handler" {
   filename         = data.archive_file.lambda_quotation_handler_zip.output_path
-  function_name    = "organic-cache-quotation-handler"
+  function_name    = "quotation_handler"
   description      = "REST API to reply quotations"
   role             = aws_iam_role.lambda_role_quotation_handler.arn
   handler          = "lambda_quotation_handler"

@@ -32,6 +32,11 @@ load:
 	aws --endpoint-url=http://localhost:4566 dynamodb batch-write-item --request-items file://dynamodb_user_discounts.json
 	aws --endpoint-url=http://localhost:4566 dynamodb batch-write-item --request-items file://dynamodb_products.json
 
+update-lambda:
+
+	aws --endpoint-url http://localhost:4566 lambda update-function-code --function-name $(lambda) --zip-file fileb://bin/lambda_$(lambda).zip --output text
+
+
 subscribe:
 	curl -i -X PUT http://localhost:4566/restapis/$(shell aws --endpoint-url=http://localhost:4566 apigateway get-rest-apis | jq -r '.items[0].id')/v1/\_user_request_/subscribe \
 	-H "Content-Type: application/json" \

@@ -3,6 +3,7 @@ package gateway
 import (
 	"context"
 	"encoding/json"
+	"log"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/ricardo-comar/organic-cache/model"
@@ -18,6 +19,7 @@ func SendResponse(gtwcli *apigatewaymanagementapi.Client, ctx context.Context, q
 		Data:         data,
 		ConnectionId: aws.String(connectionId),
 	})
+	log.Printf("gateway error, response: %+v | %+v", err, resp)
 
 	return resp, err
 }

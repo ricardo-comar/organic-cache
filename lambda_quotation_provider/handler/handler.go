@@ -29,7 +29,7 @@ func init() {
 		return nil
 	})
 
-	apiPath := os.Getenv("API_PATH")
+	// apiPath := os.Getenv("API_PATH")
 
 	dyncli = *dynamodb.NewFromConfig(cfg)
 	sqscli = *sqs.NewFromConfig(cfg)
@@ -40,7 +40,7 @@ func init() {
 		localhost := "http://" + localendpoint + ":" + os.Getenv("EDGE_PORT")
 		dyncli = *dynamodb.NewFromConfig(cfg, dynamodb.WithEndpointResolver(dynamodb.EndpointResolverFromURL(localhost)))
 		sqscli = *sqs.New(sqs.Options{Credentials: cfg.Credentials, EndpointResolver: sqs.EndpointResolverFromURL(localhost)})
-		gtwcli = *apigatewaymanagementapi.New(apigatewaymanagementapi.Options{Credentials: cfg.Credentials, EndpointResolver: apigatewaymanagementapi.EndpointResolverFromURL(localhost + apiPath)})
+		gtwcli = *apigatewaymanagementapi.New(apigatewaymanagementapi.Options{Credentials: cfg.Credentials, EndpointResolver: apigatewaymanagementapi.EndpointResolverFromURL(localhost)})
 	}
 }
 
@@ -71,8 +71,11 @@ func handleMessage(ctx context.Context, event events.SNSEventRecord) error {
 
 	log.Printf("Processando mensagem: %+v", event)
 
-	var msg *model.MessageEntity
-	json.Unmarshal([]byte(event.SNS.Message), msg)
+	msg := model.MessageEntity{}
+	if err := json.Unmarshal([]byte(event.SNS.Message), &msg); err != nil {
+		log.Printf("Erro transformando mensagem: %+v - %+v", err, event.SNS.Message)
+		return err
+	}
 
 	productPrices, err := gateway.QueryProductPrice(dyncli, msg.UserId)
 	if err != nil {
@@ -83,7 +86,7 @@ func handleMessage(ctx context.Context, event events.SNSEventRecord) error {
 	if productPrices == nil {
 
 		log.Println("Nenhuma cotação encontrada, solicitando tabela de preços")
-		gateway.RecalcMessage(ctx, &sqscli, msg)
+		gateway.RecalcMessage(ctx, &sqscli, &msg)
 
 	} else {
 

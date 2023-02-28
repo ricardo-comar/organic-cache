@@ -7,7 +7,7 @@ data "archive_file" "lambda_price_calc_zip" {
 // Function
 resource "aws_lambda_function" "price_calc" {
   filename         = data.archive_file.lambda_price_calc_zip.output_path
-  function_name    = "organic-cache-price-calc"
+  function_name    = "price_calc"
   description      = "DB Update Lambda"
   role             = aws_iam_role.lambda_role_price_calc.arn
   handler          = "lambda_price_calc"
@@ -22,6 +22,7 @@ resource "aws_lambda_function" "price_calc" {
       PRODUCTS_TABLE = aws_dynamodb_table.products.name
       USER_DISCOUNTS_TABLE = aws_dynamodb_table.user_discounts.name
       USER_PRICES_TABLE = aws_dynamodb_table.user_prices.name
+      QUOTATIONS_TOPIC_ARN = aws_sns_topic.quotations_topic.arn
     }
   }
 

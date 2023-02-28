@@ -22,7 +22,7 @@
     <br>
     <p>
         <label for="clientId">Client ID</label>
-        <input type="text" name="cliendId" />
+        <input type="text" name="cliendId" id="cliendId" />
         <button id="sendMessage">Send Message</button>
     </p>
 
@@ -41,7 +41,7 @@
             ws.onmessage = (e) => console.log(e);
 
             ws.onmessage = (event) => {
-             console.log(event.data);
+             console.log(JSON.parse(event.data));
             }
         });
 
@@ -59,7 +59,7 @@
                 action: 'MESSAGE',
                 payload: {
                     message: {
-                        id: document.getElementById('localUrl').value,
+                        user_id: document.getElementById('cliendId').value,
                         products: 
                         [ 
                             {id: "P01", qtd: 19}, 

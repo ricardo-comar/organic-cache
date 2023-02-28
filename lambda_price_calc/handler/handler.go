@@ -62,7 +62,9 @@ func handleMessages(ctx context.Context, sqsEvent events.SQSEvent) error {
 		} else {
 
 			if requestId, found := message.MessageAttributes["RequestId"]; found {
-				gateway.NotifyQuotation(ctx, &snscli, requestId.StringValue)
+				gateway.NotifyQuotation(ctx, &snscli, model.MessageEntity{
+					UserId: user.ID, RequestId: *requestId.StringValue,
+				})
 			}
 		}
 

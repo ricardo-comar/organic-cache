@@ -92,8 +92,7 @@ resource "aws_apigatewayv2_route_response" "ws_quotation_api_message_route_respo
 #   stage_name  = "v1"
 # }
 
-# output "url_quotation" {
-#   # value = "${aws_api_gateway_deployment.quotation_rest_api_deploy.invoke_url}${aws_api_gateway_resource.org_cache_quotation.path}"
-#   value = "http://localhost:4566${aws_apigatewayv2_route.ws_quotation_api_default_route.api}"
-# }
+output "url_quotation" {
+  value = "${aws_apigatewayv2_api.ws_quotation_api_gateway.api_endpoint}"
+}
 

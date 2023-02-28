@@ -7,7 +7,7 @@ data "archive_file" "lambda_cache_refresh_zip" {
 // Function
 resource "aws_lambda_function" "cache_refresh" {
   filename         = data.archive_file.lambda_cache_refresh_zip.output_path
-  function_name    = "organic-cache-cache_refresh"
+  function_name    = "cache_refresh"
   description      = "Price Cache Refresh Lambda"
   role             = aws_iam_role.lambda_role_cache_refresh.arn
   handler          = "lambda_cache_refresh"

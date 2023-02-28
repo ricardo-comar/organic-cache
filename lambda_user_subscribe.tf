@@ -7,7 +7,7 @@ data "archive_file" "lambda_user_subscribe_zip" {
 // Function
 resource "aws_lambda_function" "user_subscribe" {
   filename         = data.archive_file.lambda_user_subscribe_zip.output_path
-  function_name    = "organic-cache-user-subscribe"
+  function_name    = "user_subscribe"
   description      = "REST API to subscribe users"
   role             = aws_iam_role.lambda_role_user_subscribe.arn
   handler          = "lambda_user_subscribe"

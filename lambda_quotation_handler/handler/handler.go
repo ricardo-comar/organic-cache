@@ -46,33 +46,57 @@ func main() {
 
 func handleRequest(ctx context.Context, request events.APIGatewayWebsocketProxyRequest) (events.APIGatewayProxyResponse, error) {
 
-	if request.RequestContext.RouteKey == "MESSAGE" {
+	var response model.SocketResponse
+	switch request.RequestContext.RouteKey {
 
-		quotationReq := model.QuotationRequest{}
-		quotationReq.RequestId = uuid.New().String()
-		quotationReq.TTL = strconv.FormatInt(time.Now().Add(time.Minute*5).UnixNano(), 10)
-		quotationReq.ConnectionId = request.RequestContext.ConnectionID
+	case "$connect":
+		response = model.SocketResponse{Message: "connected !"}
 
-		err := json.Unmarshal([]byte(request.Body), &quotationReq)
+	case "$disconnect":
+		response = model.SocketResponse{Message: "disconnected !"}
+
+	case "PING":
+		response = model.SocketResponse{Message: "pong !"}
+
+	case "MESSAGE":
+
+		msg := model.SocketRequest{}
+		err := json.Unmarshal([]byte(request.Body), &msg)
 		if err != nil {
 			log.Printf("Error parsing quotation request: %+v", err)
 			return events.APIGatewayProxyResponse{StatusCode: http.StatusBadRequest}, err
 		}
+		log.Printf("Message: %+v", msg)
 
+		quotationReq := model.QuotationRequest{}
+		quotationReq.UserId = msg.Payload.Message.UserId
+		quotationReq.ProductList = msg.Payload.Message.ProductList
+
+		quotationReq.RequestId = uuid.New().String()
+		quotationReq.TTL = strconv.FormatInt(time.Now().Add(time.Minute*5).UnixNano(), 10)
+		quotationReq.ConnectionId = request.RequestContext.ConnectionID
+
+		log.Printf("Sending quotation: %+v", quotationReq)
 		err = gateway.SaveQuotationRequest(&dyncli, &quotationReq)
 		if err != nil {
 			log.Printf("Error saving quotation request: %+v", err)
 			return events.APIGatewayProxyResponse{StatusCode: http.StatusInternalServerError}, err
 		}
 
-		_, err = gateway.NotifyQuotation(ctx, &snscli, &quotationReq.RequestId)
+		_, err = gateway.NotifyQuotation(ctx, &snscli, model.MessageEntity{
+			RequestId: quotationReq.RequestId,
+			UserId:    quotationReq.UserId,
+		})
 		if err != nil {
 			log.Printf("Error notifying quotation: %+v", err)
 			return events.APIGatewayProxyResponse{StatusCode: http.StatusInternalServerError}, err
 		}
 
-		return events.APIGatewayProxyResponse{Body: "quotation under analisys", StatusCode: http.StatusOK}, nil
+		response = model.SocketResponse{Message: "quotation under analisys"}
+	default:
+		response = model.SocketResponse{Message: "route not implemented"}
 	}
 
-	return events.APIGatewayProxyResponse{Body: "no handler", StatusCode: http.StatusBadRequest}, nil
+	resp, _ := json.Marshal(response)
+	return events.APIGatewayProxyResponse{Body: string(resp), StatusCode: http.StatusOK}, nil
 }
