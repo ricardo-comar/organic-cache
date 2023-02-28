@@ -25,12 +25,17 @@ package: build
 			zip -j bin/$$dir.zip bin/$$dir; \
 		done
 
+deploy: package
+	cd terraform
+	tflocal init
+	tflocal apply --auto-approve
+
 localstack:
 	aws --endpoint http://localhost:4566 iam create-user --user-name test
 	
 load:
-	aws --endpoint-url=http://localhost:4566 dynamodb batch-write-item --request-items file://dynamodb_user_discounts.json
-	aws --endpoint-url=http://localhost:4566 dynamodb batch-write-item --request-items file://dynamodb_products.json
+	aws --endpoint-url=http://localhost:4566 dynamodb batch-write-item --request-items file://localstack/dynamodb_user_discounts.json
+	aws --endpoint-url=http://localhost:4566 dynamodb batch-write-item --request-items file://localstack/dynamodb_products.json
 
 update-lambda:
 
