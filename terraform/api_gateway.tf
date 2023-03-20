@@ -47,7 +47,7 @@ resource "aws_api_gateway_integration" "org_cache_subscribe_integration" {
 }
 
 resource "aws_api_gateway_deployment" "subscribe_rest_api_deploy" {
-  depends_on = [aws_api_gateway_integration.org_cache_subscribe_integration]
+  depends_on  = [aws_api_gateway_integration.org_cache_subscribe_integration]
   rest_api_id = aws_api_gateway_rest_api.org_cache_api.id
   stage_name  = "v1"
 }

@@ -20,7 +20,7 @@ resource "aws_lambda_function" "user_subscribe" {
   environment {
     variables = {
       ACTIVE_USERS_TABLE = aws_dynamodb_table.active_users.name
-      RECALC_QUEUE = aws_sqs_queue.price_recalc_queue.url
+      RECALC_QUEUE       = aws_sqs_queue.price_recalc_queue.url
     }
   }
 
@@ -104,5 +104,5 @@ resource "aws_lambda_permission" "apigw_lambda_user_subscribe" {
   action        = "lambda:InvokeFunction"
   function_name = aws_lambda_function.user_subscribe.function_name
   principal     = "apigateway.amazonaws.com"
-  source_arn = "${aws_api_gateway_rest_api.org_cache_api.execution_arn}/*/*/*"
+  source_arn    = "${aws_api_gateway_rest_api.org_cache_api.execution_arn}/*/*/*"
 }

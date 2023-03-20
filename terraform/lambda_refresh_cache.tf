@@ -20,7 +20,7 @@ resource "aws_lambda_function" "cache_refresh" {
   environment {
     variables = {
       ACTIVE_USERS_TABLE = aws_dynamodb_table.active_users.name
-      RECALC_QUEUE = aws_sqs_queue.price_recalc_queue.url
+      RECALC_QUEUE       = aws_sqs_queue.price_recalc_queue.url
     }
   }
 }

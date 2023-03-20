@@ -20,7 +20,7 @@ resource "aws_lambda_function" "quotation_handler" {
   environment {
     variables = {
       QUOTATIONS_TOPIC_ARN = aws_sns_topic.quotations_topic.arn
-      QUOTATIONS_TABLE = aws_dynamodb_table.quotations.name
+      QUOTATIONS_TABLE     = aws_dynamodb_table.quotations.name
     }
   }
 
@@ -112,5 +112,5 @@ resource "aws_lambda_permission" "apigw_lambda_quotation_handler" {
   action        = "lambda:InvokeFunction"
   function_name = aws_lambda_function.quotation_handler.function_name
   principal     = "apigateway.amazonaws.com"
-  source_arn = "${aws_apigatewayv2_api.ws_quotation_api_gateway.execution_arn}/*/*/*"
+  source_arn    = "${aws_apigatewayv2_api.ws_quotation_api_gateway.execution_arn}/*/*/*"
 }

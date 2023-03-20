@@ -93,6 +93,6 @@ resource "aws_apigatewayv2_route_response" "ws_quotation_api_message_route_respo
 # }
 
 output "url_quotation" {
-  value = "${aws_apigatewayv2_api.ws_quotation_api_gateway.api_endpoint}"
+  value = aws_apigatewayv2_api.ws_quotation_api_gateway.api_endpoint
 }
 

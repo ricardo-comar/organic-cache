@@ -49,7 +49,7 @@ resource "aws_dynamodb_table" "user_prices" {
   read_capacity  = "2"
   write_capacity = "1"
   hash_key       = "user_id"
- 
+
   attribute {
     name = "user_id"
     type = "S"
@@ -62,7 +62,7 @@ resource "aws_dynamodb_table" "quotations" {
   read_capacity  = "2"
   write_capacity = "1"
   hash_key       = "request_id"
- 
+
   attribute {
     name = "request_id"
     type = "S"

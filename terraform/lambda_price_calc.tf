@@ -19,9 +19,9 @@ resource "aws_lambda_function" "price_calc" {
 
   environment {
     variables = {
-      PRODUCTS_TABLE = aws_dynamodb_table.products.name
+      PRODUCTS_TABLE       = aws_dynamodb_table.products.name
       USER_DISCOUNTS_TABLE = aws_dynamodb_table.user_discounts.name
-      USER_PRICES_TABLE = aws_dynamodb_table.user_prices.name
+      USER_PRICES_TABLE    = aws_dynamodb_table.user_prices.name
       QUOTATIONS_TOPIC_ARN = aws_sns_topic.quotations_topic.arn
     }
   }
