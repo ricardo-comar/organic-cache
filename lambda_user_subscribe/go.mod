@@ -1,6 +1,6 @@
-module github.com/ricardo-comar/organic-cache
+module github.com/ricardo-comar/organic-cache/user_subscribe
 
-go 1.18
+go 1.21.3
 
 require (
 	github.com/aws/aws-sdk-go-v2/credentials v1.12.21 // indirect
@@ -31,3 +31,5 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/sqs v1.20.2
 	github.com/stretchr/testify v1.7.2
 )
+
+replace github.com/ricardo-comar/organic-cache/user_subscribe/lib_common => ../lib_common

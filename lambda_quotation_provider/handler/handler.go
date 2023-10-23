@@ -14,8 +14,8 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/apigatewaymanagementapi"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
 	"github.com/aws/aws-sdk-go-v2/service/sqs"
-	"github.com/ricardo-comar/organic-cache/gateway"
-	"github.com/ricardo-comar/organic-cache/model"
+	"github.com/ricardo-comar/organic-cache/quotation_provider/gateway"
+	"github.com/ricardo-comar/organic-cache/quotation_provider/model"
 )
 
 var cfg aws.Config

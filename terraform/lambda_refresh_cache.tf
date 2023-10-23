@@ -1,7 +1,7 @@
 data "archive_file" "lambda_cache_refresh_zip" {
   type        = "zip"
-  source_file = "bin/lambda_cache_refresh"
-  output_path = "bin/cache_refresh.zip"
+  source_file = "../bin/lambda_cache_refresh"
+  output_path = "../bin/lambda_cache_refresh.zip"
 }
 
 // Function

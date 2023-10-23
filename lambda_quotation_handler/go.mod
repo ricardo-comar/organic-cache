@@ -1,6 +1,6 @@
-module github.com/ricardo-comar/organic-cache
+module github.com/ricardo-comar/organic-cache/quotation_handler
 
-go 1.18
+go 1.21.3
 
 require (
 	github.com/aws/aws-sdk-go-v2/credentials v1.12.21 // indirect
@@ -28,3 +28,5 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/sns v1.20.4
 	github.com/google/uuid v1.3.0
 )
+
+replace github.com/ricardo-comar/organic-cache/quotation_handler/lib_common => ../lib_common

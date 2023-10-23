@@ -16,8 +16,8 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
 	"github.com/aws/aws-sdk-go-v2/service/sns"
 	"github.com/google/uuid"
-	"github.com/ricardo-comar/organic-cache/gateway"
-	"github.com/ricardo-comar/organic-cache/model"
+	"github.com/ricardo-comar/organic-cache/quotation_handler/gateway"
+	"github.com/ricardo-comar/organic-cache/quotation_handler/model"
 )
 
 var cfg aws.Config

@@ -1,7 +1,7 @@
 data "archive_file" "lambda_user_subscribe_zip" {
   type        = "zip"
-  source_file = "bin/lambda_user_subscribe"
-  output_path = "bin/user_subscribe.zip"
+  source_file = "../bin/lambda_user_subscribe"
+  output_path = "../bin/lambda_user_subscribe.zip"
 }
 
 // Function

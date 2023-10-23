@@ -52,6 +52,23 @@ resource "aws_api_gateway_deployment" "subscribe_rest_api_deploy" {
   stage_name  = "v1"
 }
 
+resource "aws_api_gateway_stage" "subscribe_rest_api_stage" {
+  deployment_id = aws_api_gateway_deployment.subscribe_rest_api_deploy.id
+  rest_api_id   = aws_api_gateway_rest_api.org_cache_api.id
+  stage_name    = "dev"
+}
+
+resource "aws_api_gateway_method_settings" "example" {
+  rest_api_id = aws_api_gateway_rest_api.org_cache_api.id
+  stage_name  = aws_api_gateway_stage.subscribe_rest_api_stage.stage_name
+  method_path = "*/*"
+
+  settings {
+    metrics_enabled = true
+    logging_level   = "INFO"
+  }
+}
+
 output "url_subscribe" {
   # value = "${aws_api_gateway_deployment.subscribe_rest_api_deploy.invoke_url}${aws_api_gateway_resource.org_cache_subscribe.path}"
   value = "http://localhost:4566${aws_api_gateway_resource.org_cache_subscribe.path}"

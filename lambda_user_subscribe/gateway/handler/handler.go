@@ -6,7 +6,7 @@ import (
 	"os"
 	"time"
 
-	"github.com/ricardo-comar/organic-cache/gateway"
+	"github.com/ricardo-comar/organic-cache/user_subscribe/gateway"
 
 	"github.com/aws/aws-lambda-go/events"
 	"github.com/aws/aws-lambda-go/lambda"

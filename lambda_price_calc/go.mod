@@ -1,6 +1,6 @@
-module github.com/ricardo-comar/organic-cache
+module github.com/ricardo-comar/organic-cache/price_calc
 
-go 1.18
+go 1.21.3
 
 require (
 	github.com/aws/aws-sdk-go-v2/credentials v1.12.23 // indirect
@@ -26,5 +26,6 @@ require (
 	github.com/aws/aws-sdk-go-v2/feature/dynamodb/attributevalue v1.10.12
 	github.com/aws/aws-sdk-go-v2/service/dynamodb v1.18.3
 	github.com/aws/aws-sdk-go-v2/service/sns v1.20.4
-	github.com/aws/aws-sdk-go-v2/service/sqs v1.20.2
 )
+
+replace github.com/ricardo-comar/organic-cache/price_calc/lib_common => ../lib_common

@@ -8,7 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/feature/dynamodb/attributevalue"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
-	"github.com/ricardo-comar/organic-cache/model"
+	"github.com/ricardo-comar/organic-cache/quotation_provider/model"
 )
 
 func QueryProductPrice(cli dynamodb.Client, userId string) (*model.UserPricesEntity, error) {

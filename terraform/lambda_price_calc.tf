@@ -1,7 +1,7 @@
 data "archive_file" "lambda_price_calc_zip" {
   type        = "zip"
-  source_file = "bin/lambda_price_calc"
-  output_path = "bin/price_calc.zip"
+  source_file = "../bin/lambda_price_calc"
+  output_path = "../bin/lambda_price_calc.zip"
 }
 
 // Function

@@ -13,9 +13,9 @@ import (
 	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
 	"github.com/aws/aws-sdk-go-v2/service/sns"
-	"github.com/ricardo-comar/organic-cache/gateway"
-	"github.com/ricardo-comar/organic-cache/model"
-	"github.com/ricardo-comar/organic-cache/service"
+	"github.com/ricardo-comar/organic-cache/price_calc/gateway"
+	"github.com/ricardo-comar/organic-cache/price_calc/model"
+	"github.com/ricardo-comar/organic-cache/price_calc/service"
 )
 
 var cfg aws.Config

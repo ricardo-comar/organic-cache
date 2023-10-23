@@ -1,7 +1,7 @@
 data "archive_file" "lambda_quotation_provider_zip" {
   type        = "zip"
-  source_file = "bin/lambda_quotation_provider"
-  output_path = "bin/quotation_provider.zip"
+  source_file = "../bin/lambda_quotation_provider"
+  output_path = "../bin/lambda_quotation_provider.zip"
 }
 
 // Function

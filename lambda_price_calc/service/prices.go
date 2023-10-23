@@ -4,8 +4,8 @@ import (
 	"log"
 
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
-	"github.com/ricardo-comar/organic-cache/gateway"
-	"github.com/ricardo-comar/organic-cache/model"
+	"github.com/ricardo-comar/organic-cache/price_calc/gateway"
+	"github.com/ricardo-comar/organic-cache/price_calc/model"
 )
 
 func GenerateUserPrices(dyncli *dynamodb.Client, user *model.UserEntity) error {

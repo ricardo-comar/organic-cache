@@ -5,7 +5,7 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/ricardo-comar/organic-cache/model"
+	"github.com/ricardo-comar/organic-cache/user_subscribe/model"
 )
 
 func CreateEntity(body string) (model.UserEntity, error) {

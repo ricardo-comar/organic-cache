@@ -8,7 +8,7 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/sns"
-	"github.com/ricardo-comar/organic-cache/model"
+	"github.com/ricardo-comar/organic-cache/quotation_handler/model"
 )
 
 func NotifyQuotation(ctx context.Context, cli *sns.Client, msg model.MessageEntity) (*string, error) {
