@@ -8,10 +8,10 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/sns"
-	"github.com/ricardo-comar/organic-cache/price_calc/model"
+	"github.com/ricardo-comar/organic-cache/lib_common/message"
 )
 
-func NotifyQuotation(ctx context.Context, cli *sns.Client, msg model.MessageEntity) (*string, error) {
+func NotifyQuotation(ctx context.Context, cli *sns.Client, msg message.UserPricesMessage) (*string, error) {
 
 	body, _ := json.Marshal(msg)
 	res, err := cli.Publish(ctx, &sns.PublishInput{

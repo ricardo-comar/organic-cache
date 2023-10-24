@@ -4,11 +4,11 @@ import (
 	"log"
 
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
+	"github.com/ricardo-comar/organic-cache/lib_common/entity"
 	"github.com/ricardo-comar/organic-cache/price_calc/gateway"
-	"github.com/ricardo-comar/organic-cache/price_calc/model"
 )
 
-func GenerateUserPrices(dyncli *dynamodb.Client, user *model.UserEntity) error {
+func GenerateUserPrices(dyncli *dynamodb.Client, user *entity.UserEntity) error {
 
 	products, err := gateway.ScanProducts(dyncli)
 	if err != nil {
@@ -24,8 +24,8 @@ func GenerateUserPrices(dyncli *dynamodb.Client, user *model.UserEntity) error {
 	}
 	log.Printf("User discounts: %+v\n", userDiscounts)
 
-	prices := model.UserPricesEntity{
-		UserId: user.ID,
+	prices := entity.UserPricesEntity{
+		UserId: user.UserId,
 	}
 
 	for _, product := range *products {
@@ -42,7 +42,7 @@ func GenerateUserPrices(dyncli *dynamodb.Client, user *model.UserEntity) error {
 			}
 		}
 
-		prices.Prices = append(prices.Prices, model.ProductPrice{
+		prices.Products = append(prices.Products, entity.ProductPrice{
 			ProductId:     product.ProductId,
 			ProductName:   product.Name,
 			OriginalValue: product.Value,

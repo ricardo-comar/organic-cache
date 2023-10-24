@@ -3,8 +3,8 @@ package api
 import "github.com/ricardo-comar/organic-cache/lib_common/model"
 
 type QuotationRequest struct {
-	UserId   string              `json:"user_id"`
-	Products []model.ProductItem `json:"products"`
+	UserId   string                `json:"user_id"`
+	Products []model.QuotationItem `json:"products"`
 }
 
 type QuotationResponse struct {

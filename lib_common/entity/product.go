@@ -1,4 +1,4 @@
-package model
+package entity
 
 type ProductEntity struct {
 	ProductId string  `dynamodbav:"id" json:"id"`

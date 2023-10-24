@@ -21,19 +21,19 @@ func (*TimeoutError) Error() string {
 }
 
 var queueURL = os.Getenv("QUOTATIONS_QUEUE")
-var timeout = 3 * time.Second
+var timeout = 10 * time.Second
 
 func WaitForResponse(ctx context.Context, sqscli *sqs.Client, requestId string) (*api.QuotationResponse, error) {
 
-	done := make(chan bool)
+	taskCompleted := make(chan bool)
 	response := make(chan *api.QuotationResponse)
 	err := make(chan error)
 
-	go waitForMessage(done, response, err, ctx, sqscli, requestId)
+	go waitForMessage(taskCompleted, response, err, ctx, sqscli, requestId)
 
 	select {
 
-	case <-done:
+	case <-taskCompleted:
 		fmt.Println("Processamento finalizado")
 		return <-response, <-err
 
@@ -45,48 +45,64 @@ func WaitForResponse(ctx context.Context, sqscli *sqs.Client, requestId string) 
 }
 
 func waitForMessage(done chan bool, response chan *api.QuotationResponse, errChan chan error, ctx context.Context, sqscli *sqs.Client, requestId string) {
-	result, err := sqscli.ReceiveMessage(ctx, &sqs.ReceiveMessageInput{
-		QueueUrl:              &queueURL,
-		MaxNumberOfMessages:   1,
-		WaitTimeSeconds:       int32(timeout),
-		AttributeNames:        []types.QueueAttributeName{"All"},
-		MessageAttributeNames: []string{"All"},
-	})
 
-	if err != nil {
-		fmt.Println("Erro ao receber mensagem:", err)
-		errChan <- err
-		done <- true
-	}
+	for {
+		result, err := sqscli.ReceiveMessage(ctx, &sqs.ReceiveMessageInput{
+			QueueUrl:              &queueURL,
+			MaxNumberOfMessages:   1,
+			WaitTimeSeconds:       3,
+			AttributeNames:        []types.QueueAttributeName{"All"},
+			MessageAttributeNames: []string{"All"},
+		})
 
-	for _, msg := range result.Messages {
-		request_id := msg.MessageAttributes["request_id"].StringValue
-		if *request_id == requestId {
-			fmt.Println("Mensagem relevante:", *msg.Body)
-			quotation := message.QuotationMessage{}
-			json.Unmarshal([]byte(*msg.Body), &quotation)
-			if err != nil {
-				fmt.Println("Erro ao transformar mensagem em struct:", err)
-				errChan <- err
-				done <- true
-			}
-
-			_, err := sqscli.DeleteMessage(ctx, &sqs.DeleteMessageInput{
-				QueueUrl:      &queueURL,
-				ReceiptHandle: msg.ReceiptHandle,
-			})
-			if err != nil {
-				fmt.Println("Erro ao excluir a mensagem:", err)
-				errChan <- err
-				done <- true
-			}
-
-			response <- &api.QuotationResponse{
-				RequestId: quotation.RequestId,
-				UserId:    quotation.UserId,
-				Products:  quotation.Products,
-			}
+		if err != nil {
+			fmt.Println("Erro ao receber mensagem:", err)
+			errChan <- err
 			done <- true
+		}
+
+		for _, msg := range result.Messages {
+			request_id := msg.MessageAttributes["RequestId"].StringValue
+
+			if requestId, found := msg.MessageAttributes["RequestId"]; found && *request_id == *requestId.StringValue {
+
+				fmt.Println("Mensagem relevante:", *msg.Body)
+				quotation := message.QuotationMessage{}
+				json.Unmarshal([]byte(*msg.Body), &quotation)
+				if err != nil {
+					fmt.Println("Erro ao transformar mensagem em struct:", err)
+					errChan <- err
+					done <- true
+				}
+
+				_, err := sqscli.DeleteMessage(ctx, &sqs.DeleteMessageInput{
+					QueueUrl:      &queueURL,
+					ReceiptHandle: msg.ReceiptHandle,
+				})
+				if err != nil {
+					fmt.Println("Erro ao excluir a mensagem:", err)
+					errChan <- err
+					done <- true
+				}
+
+				response <- &api.QuotationResponse{
+					RequestId: quotation.RequestId,
+					UserId:    quotation.UserId,
+					Products:  quotation.Products,
+				}
+				done <- true
+			} else {
+
+				_, err := sqscli.ChangeMessageVisibility(ctx, &sqs.ChangeMessageVisibilityInput{
+					QueueUrl:          &queueURL,
+					ReceiptHandle:     msg.ReceiptHandle,
+					VisibilityTimeout: 0, // Defina para 0 para devolver imediatamente à fila
+				})
+				if err != nil {
+					fmt.Println("Erro ao devolver a mensagem à fila:", err)
+				}
+			}
+
 		}
 
 	}

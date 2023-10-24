@@ -13,8 +13,10 @@ import (
 	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
 	"github.com/aws/aws-sdk-go-v2/service/sns"
+	"github.com/ricardo-comar/organic-cache/lib_common/entity"
+	"github.com/ricardo-comar/organic-cache/lib_common/message"
+
 	"github.com/ricardo-comar/organic-cache/price_calc/gateway"
-	"github.com/ricardo-comar/organic-cache/price_calc/model"
 	"github.com/ricardo-comar/organic-cache/price_calc/service"
 )
 
@@ -46,12 +48,12 @@ func handleMessages(ctx context.Context, sqsEvent events.SQSEvent) error {
 
 	inicioProc := time.Now()
 
-	for _, message := range sqsEvent.Records {
+	for _, record := range sqsEvent.Records {
 		inicioMsg := time.Now()
 
-		log.Printf("Processando mensagem: %s", message.Body)
-		user := model.UserEntity{}
-		json.Unmarshal([]byte(message.Body), &user)
+		log.Printf("Processando mensagem: %s", record.Body)
+		user := entity.UserEntity{}
+		json.Unmarshal([]byte(record.Body), &user)
 
 		err := service.GenerateUserPrices(&dyncli, &user)
 
@@ -61,16 +63,16 @@ func handleMessages(ctx context.Context, sqsEvent events.SQSEvent) error {
 
 		} else {
 
-			if requestId, found := message.MessageAttributes["RequestId"]; found {
-				gateway.NotifyQuotation(ctx, &snscli, model.MessageEntity{
-					UserId: user.ID, RequestId: *requestId.StringValue,
+			if requestId, found := record.MessageAttributes["RequestId"]; found {
+				gateway.NotifyQuotation(ctx, &snscli, message.UserPricesMessage{
+					UserId: user.UserId, RequestId: *requestId.StringValue,
 				})
 			}
 		}
 
-		log.Printf("Finalizando - mensagem %s em %dms", message.MessageId, time.Now().Sub(inicioMsg).Milliseconds())
+		log.Printf("Finalizando - mensagem %s em %dms", record.MessageId, time.Since(inicioMsg).Milliseconds())
 	}
 
-	log.Printf("Finalizando - processamento em %dms", time.Now().Sub(inicioProc).Milliseconds())
+	log.Printf("Finalizando - processamento em %dms", time.Since(inicioProc).Milliseconds())
 	return nil
 }

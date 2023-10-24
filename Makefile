@@ -37,6 +37,9 @@ load:
 	aws --endpoint-url=http://localhost:4566 dynamodb batch-write-item --request-items file://localstack/dynamodb_user_discounts.json
 	aws --endpoint-url=http://localhost:4566 dynamodb batch-write-item --request-items file://localstack/dynamodb_products.json
 
+scan:
+	aws --endpoint-url=http://localhost:4566 dynamodb scan --table-name $(table)
+
 update-lambda:
 
 	aws --endpoint-url http://localhost:4566 lambda update-function-code --function-name $(lambda) --zip-file fileb://bin/lambda_$(lambda).zip --output text
@@ -47,7 +50,7 @@ subscribe:
 	-H "Content-Type: application/json" \
    -d '{"user_id": "$(ID)"}' 
 
-# quotation:
-# 	curl -s -X POST http://localhost:4566/restapis/$(shell aws --endpoint-url=http://localhost:4566 apigateway get-rest-apis | jq -r '.items[0].id')/v1/\_user_request_/quotation \
-# 	-H "Content-Type: application/json" \
-#    -d '{"user_id": "$(ID)", "products": [ {"id": "P01", "qtd": 19}, {"id": "P02", "qtd": 30}, {"id": "P05", "qtd": 10} ] }' | jq
+quotation:
+	curl -s -X POST http://localhost:4566/restapis/$(shell aws --endpoint-url=http://localhost:4566 apigateway get-rest-apis | jq -r '.items[0].id')/v1/\_user_request_/quotation \
+	-H "Content-Type: application/json" \
+   -d '{"user_id": "$(ID)", "products": [ {"id": "P01", "qtd": 19}, {"id": "P02", "qtd": 30}, {"id": "P05", "qtd": 10} ] }' | jq

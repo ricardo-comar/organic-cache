@@ -62,14 +62,17 @@ func handleRequest(ctx context.Context, request events.APIGatewayProxyRequest) (
 	}
 
 	response, err := service.WaitForResponse(ctx, sqscli, request.RequestContext.RequestID)
-	switch err {
-	case &service.TimeoutError{}:
-		log.Printf("Timeout waiting for quotation response: %+v", err)
-		return events.APIGatewayProxyResponse{StatusCode: http.StatusRequestTimeout}, err
-	case nil:
+
+	if err == nil {
 		log.Printf("Response: %+v", response)
 		resp, _ := json.Marshal(response)
 		return events.APIGatewayProxyResponse{Body: string(resp), StatusCode: http.StatusOK}, nil
+	}
+
+	switch err.(type) {
+	case *service.TimeoutError:
+		log.Printf("Timeout waiting for quotation response: %+v", err)
+		return events.APIGatewayProxyResponse{StatusCode: http.StatusRequestTimeout}, err
 	}
 
 	log.Printf("Error waiting for quotation response: %+v", err)

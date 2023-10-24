@@ -125,7 +125,7 @@ func handleMessage(ctx context.Context, event events.SNSEventRecord) error {
 		}
 
 		log.Printf("Cotação realizada: %+v", *quotationResponse)
-		gateway.NotifyQuotation(ctx, &snscli, *quotationResponse)
+		gateway.NotifyQuotation(ctx, &sqscli, *quotationResponse)
 	}
 
 	return err

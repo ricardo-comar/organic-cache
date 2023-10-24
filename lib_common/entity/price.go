@@ -6,9 +6,9 @@ type UserPricesEntity struct {
 }
 
 type ProductPrice struct {
-	ProductId     string  `dynamodbav:"product_id" json:"product_id"`
-	ProductName   string  `dynamodbav:"product_name" json:"product_name"`
-	OriginalValue float32 `dynamodbav:"original_value" json:"original_value"`
-	Value         float32 `dynamodbav:"value" json:"value"`
-	Discount      float32 `dynamodbav:"discount" json:"discount"`
+	ProductId     string  `json:"product_id"`
+	ProductName   string  `json:"product_name"`
+	OriginalValue float32 `json:"original_value"`
+	Value         float32 `json:"value"`
+	Discount      float32 `json:"discount"`
 }

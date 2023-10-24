@@ -1,4 +1,4 @@
-package model
+package entity
 
 type DiscountEntity struct {
 	UserId    string            `dynamodbav:"user_id" json:"user_id"`
