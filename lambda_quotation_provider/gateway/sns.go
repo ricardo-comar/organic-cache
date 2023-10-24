@@ -11,12 +11,12 @@ import (
 	"github.com/ricardo-comar/organic-cache/lib_common/message"
 )
 
-func NotifyQuotation(ctx context.Context, cli *sns.Client, msg message.UserPricesMessage) (*string, error) {
+func NotifyQuotation(ctx context.Context, cli *sns.Client, msg message.QuotationMessage) (*string, error) {
 
 	body, _ := json.Marshal(msg)
 	res, err := cli.Publish(ctx, &sns.PublishInput{
 		Message:  aws.String(string(body)),
-		TopicArn: aws.String(os.Getenv("USER_PRICES_TOPIC_ARN")),
+		TopicArn: aws.String(os.Getenv("QUOTATIONS_TOPIC_ARN")),
 	})
 
 	if err != nil {

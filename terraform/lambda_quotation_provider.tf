@@ -21,8 +21,7 @@ resource "aws_lambda_function" "quotation_provider" {
     variables = {
       USER_PRICES_TABLE = aws_dynamodb_table.user_prices.name
       RECALC_QUEUE      = aws_sqs_queue.price_recalc_queue.url
-      QUOTATIONS_TABLE  = aws_dynamodb_table.quotations.name
-      API_PATH          = aws_apigatewayv2_api.ws_quotation_api_gateway.api_endpoint
+      QUOTATIONS_QUEUE  = aws_sqs_queue.quotation_queue.url
     }
   }
 

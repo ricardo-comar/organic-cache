@@ -16,7 +16,7 @@ func NotifyQuotation(ctx context.Context, cli *sns.Client, msg model.MessageEnti
 	body, _ := json.Marshal(msg)
 	res, err := cli.Publish(ctx, &sns.PublishInput{
 		Message:  aws.String(string(body)),
-		TopicArn: aws.String(os.Getenv("QUOTATIONS_TOPIC_ARN")),
+		TopicArn: aws.String(os.Getenv("USER_PRICES_TOPIC_ARN")),
 	})
 
 	if err != nil {

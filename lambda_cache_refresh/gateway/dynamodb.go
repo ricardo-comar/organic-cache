@@ -4,16 +4,16 @@ import (
 	"context"
 	"os"
 
-	"github.com/ricardo-comar/organic-cache/cache_refresh/model"
+	"github.com/ricardo-comar/organic-cache/lib_common/entity"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/feature/dynamodb/attributevalue"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
 )
 
-func QueryUsers(cli *dynamodb.Client) ([]model.UserEntity, error) {
+func QueryUsers(cli *dynamodb.Client) ([]entity.UserEntity, error) {
 
-	var totalUsers []model.UserEntity
+	var totalUsers []entity.UserEntity
 
 	input := dynamodb.NewScanPaginator(cli, &dynamodb.ScanInput{
 		TableName: aws.String(os.Getenv("ACTIVE_USERS_TABLE")),
@@ -25,7 +25,7 @@ func QueryUsers(cli *dynamodb.Client) ([]model.UserEntity, error) {
 			return nil, err
 		}
 
-		var users []model.UserEntity
+		var users []entity.UserEntity
 		err = attributevalue.UnmarshalListOfMaps(out.Items, &users)
 		if err != nil {
 			return nil, err

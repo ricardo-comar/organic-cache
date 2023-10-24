@@ -6,8 +6,6 @@ import (
 	"log"
 	"net/http"
 	"os"
-	"strconv"
-	"time"
 
 	"github.com/aws/aws-lambda-go/events"
 	"github.com/aws/aws-lambda-go/lambda"
@@ -15,14 +13,15 @@ import (
 	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
 	"github.com/aws/aws-sdk-go-v2/service/sns"
-	"github.com/google/uuid"
-	"github.com/ricardo-comar/organic-cache/quotation_handler/gateway"
-	"github.com/ricardo-comar/organic-cache/quotation_handler/model"
+	"github.com/aws/aws-sdk-go-v2/service/sqs"
+	"github.com/ricardo-comar/organic-cache/lib_common/api"
+	"github.com/ricardo-comar/organic-cache/quotation_handler/service"
 )
 
 var cfg aws.Config
-var snscli sns.Client
-var dyncli dynamodb.Client
+var snscli *sns.Client
+var sqscli *sqs.Client
+var dyncli *dynamodb.Client
 
 func init() {
 	cfg, _ = config.LoadDefaultConfig(context.TODO(), func(o *config.LoadOptions) error {
@@ -30,13 +29,15 @@ func init() {
 		return nil
 	})
 
-	dyncli = *dynamodb.NewFromConfig(cfg)
-	snscli = *sns.NewFromConfig(cfg)
+	dyncli = dynamodb.NewFromConfig(cfg)
+	snscli = sns.NewFromConfig(cfg)
+	sqscli = sqs.NewFromConfig(cfg)
 
 	localendpoint, found := os.LookupEnv("LOCALSTACK_HOSTNAME")
 	if found {
-		dyncli = *dynamodb.NewFromConfig(cfg, dynamodb.WithEndpointResolver(dynamodb.EndpointResolverFromURL("http://"+localendpoint+":4566")))
-		snscli = *sns.New(sns.Options{Credentials: cfg.Credentials, EndpointResolver: sns.EndpointResolverFromURL("http://" + localendpoint + ":" + os.Getenv("EDGE_PORT"))})
+		dyncli = dynamodb.NewFromConfig(cfg, dynamodb.WithEndpointResolver(dynamodb.EndpointResolverFromURL("http://"+localendpoint+":4566")))
+		snscli = sns.New(sns.Options{Credentials: cfg.Credentials, EndpointResolver: sns.EndpointResolverFromURL("http://" + localendpoint + ":" + os.Getenv("EDGE_PORT"))})
+		sqscli = sqs.New(sqs.Options{Credentials: cfg.Credentials, EndpointResolver: sqs.EndpointResolverFromURL("http://" + localendpoint + ":" + os.Getenv("EDGE_PORT"))})
 	}
 }
 
@@ -44,59 +45,33 @@ func main() {
 	lambda.Start(handleRequest)
 }
 
-func handleRequest(ctx context.Context, request events.APIGatewayWebsocketProxyRequest) (events.APIGatewayProxyResponse, error) {
+func handleRequest(ctx context.Context, request events.APIGatewayProxyRequest) (events.APIGatewayProxyResponse, error) {
 
-	var response model.SocketResponse
-	switch request.RequestContext.RouteKey {
+	req := api.QuotationRequest{}
+	err := json.Unmarshal([]byte(request.Body), &req)
+	if err != nil {
+		log.Printf("Error parsing request: %+v", err)
+		return events.APIGatewayProxyResponse{StatusCode: http.StatusBadRequest}, err
+	}
+	log.Printf("Message: %+v", req)
 
-	case "$connect":
-		response = model.SocketResponse{Message: "connected !"}
-
-	case "$disconnect":
-		response = model.SocketResponse{Message: "disconnected !"}
-
-	case "PING":
-		response = model.SocketResponse{Message: "pong !"}
-
-	case "MESSAGE":
-
-		msg := model.SocketRequest{}
-		err := json.Unmarshal([]byte(request.Body), &msg)
-		if err != nil {
-			log.Printf("Error parsing quotation request: %+v", err)
-			return events.APIGatewayProxyResponse{StatusCode: http.StatusBadRequest}, err
-		}
-		log.Printf("Message: %+v", msg)
-
-		quotationReq := model.QuotationRequest{}
-		quotationReq.UserId = msg.Payload.Message.UserId
-		quotationReq.ProductList = msg.Payload.Message.ProductList
-
-		quotationReq.RequestId = uuid.New().String()
-		quotationReq.TTL = strconv.FormatInt(time.Now().Add(time.Minute*5).UnixNano(), 10)
-		quotationReq.ConnectionId = request.RequestContext.ConnectionID
-
-		log.Printf("Sending quotation: %+v", quotationReq)
-		err = gateway.SaveQuotationRequest(&dyncli, &quotationReq)
-		if err != nil {
-			log.Printf("Error saving quotation request: %+v", err)
-			return events.APIGatewayProxyResponse{StatusCode: http.StatusInternalServerError}, err
-		}
-
-		_, err = gateway.NotifyQuotation(ctx, &snscli, model.MessageEntity{
-			RequestId: quotationReq.RequestId,
-			UserId:    quotationReq.UserId,
-		})
-		if err != nil {
-			log.Printf("Error notifying quotation: %+v", err)
-			return events.APIGatewayProxyResponse{StatusCode: http.StatusInternalServerError}, err
-		}
-
-		response = model.SocketResponse{Message: "quotation under analisys"}
-	default:
-		response = model.SocketResponse{Message: "route not implemented"}
+	err = service.RequestQuotation(ctx, snscli, dyncli, req, request.RequestContext.RequestID)
+	if err != nil {
+		log.Printf("Error saving quotation request: %+v", err)
+		return events.APIGatewayProxyResponse{StatusCode: http.StatusInternalServerError}, err
 	}
 
-	resp, _ := json.Marshal(response)
-	return events.APIGatewayProxyResponse{Body: string(resp), StatusCode: http.StatusOK}, nil
+	response, err := service.WaitForResponse(ctx, sqscli, request.RequestContext.RequestID)
+	switch err {
+	case &service.TimeoutError{}:
+		log.Printf("Timeout waiting for quotation response: %+v", err)
+		return events.APIGatewayProxyResponse{StatusCode: http.StatusRequestTimeout}, err
+	case nil:
+		log.Printf("Response: %+v", response)
+		resp, _ := json.Marshal(response)
+		return events.APIGatewayProxyResponse{Body: string(resp), StatusCode: http.StatusOK}, nil
+	}
+
+	log.Printf("Error waiting for quotation response: %+v", err)
+	return events.APIGatewayProxyResponse{StatusCode: http.StatusInternalServerError}, err
 }

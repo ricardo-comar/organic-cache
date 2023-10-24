@@ -8,20 +8,21 @@ import (
 	"time"
 
 	"github.com/aws/aws-lambda-go/events"
-	inv "github.com/aws/aws-lambda-go/lambda"
+	"github.com/aws/aws-lambda-go/lambda"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/config"
-	"github.com/aws/aws-sdk-go-v2/service/apigatewaymanagementapi"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
+	"github.com/aws/aws-sdk-go-v2/service/sns"
 	"github.com/aws/aws-sdk-go-v2/service/sqs"
+	"github.com/ricardo-comar/organic-cache/lib_common/message"
+	"github.com/ricardo-comar/organic-cache/lib_common/model"
 	"github.com/ricardo-comar/organic-cache/quotation_provider/gateway"
-	"github.com/ricardo-comar/organic-cache/quotation_provider/model"
 )
 
 var cfg aws.Config
 var dyncli dynamodb.Client
 var sqscli sqs.Client
-var gtwcli apigatewaymanagementapi.Client
+var snscli sns.Client
 
 func init() {
 	cfg, _ = config.LoadDefaultConfig(context.TODO(), func(o *config.LoadOptions) error {
@@ -33,19 +34,19 @@ func init() {
 
 	dyncli = *dynamodb.NewFromConfig(cfg)
 	sqscli = *sqs.NewFromConfig(cfg)
-	gtwcli = *apigatewaymanagementapi.NewFromConfig(cfg)
+	snscli = *sns.NewFromConfig(cfg)
 
 	localendpoint, found := os.LookupEnv("LOCALSTACK_HOSTNAME")
 	if found {
 		localhost := "http://" + localendpoint + ":" + os.Getenv("EDGE_PORT")
 		dyncli = *dynamodb.NewFromConfig(cfg, dynamodb.WithEndpointResolver(dynamodb.EndpointResolverFromURL(localhost)))
 		sqscli = *sqs.New(sqs.Options{Credentials: cfg.Credentials, EndpointResolver: sqs.EndpointResolverFromURL(localhost)})
-		gtwcli = *apigatewaymanagementapi.New(apigatewaymanagementapi.Options{Credentials: cfg.Credentials, EndpointResolver: apigatewaymanagementapi.EndpointResolverFromURL(localhost)})
+		snscli = *sns.New(sns.Options{Credentials: cfg.Credentials, EndpointResolver: sns.EndpointResolverFromURL(localhost)})
 	}
 }
 
 func main() {
-	inv.Start(handleMessages)
+	lambda.Start(handleMessages)
 }
 
 func handleMessages(ctx context.Context, snsEvent events.SNSEvent) error {
@@ -71,7 +72,7 @@ func handleMessage(ctx context.Context, event events.SNSEventRecord) error {
 
 	log.Printf("Processando mensagem: %+v", event)
 
-	msg := model.MessageEntity{}
+	msg := message.UserPricesMessage{}
 	if err := json.Unmarshal([]byte(event.SNS.Message), &msg); err != nil {
 		log.Printf("Erro transformando mensagem: %+v - %+v", err, event.SNS.Message)
 		return err
@@ -90,9 +91,9 @@ func handleMessage(ctx context.Context, event events.SNSEventRecord) error {
 
 	} else {
 
-		var quotationResponse *model.QuotationEntity
-		quotationResponse = &model.QuotationEntity{}
-		quotationResponse.Id = msg.RequestId
+		var quotationResponse = &message.QuotationMessage{}
+		quotationResponse.RequestId = msg.RequestId
+		quotationResponse.UserId = msg.UserId
 		quotationResponse.Products = []model.ProductQuotation{}
 
 		quotationRequest, err := gateway.QueryRequest(dyncli, msg.RequestId)
@@ -124,7 +125,7 @@ func handleMessage(ctx context.Context, event events.SNSEventRecord) error {
 		}
 
 		log.Printf("Cotação realizada: %+v", *quotationResponse)
-		gateway.SendResponse(&gtwcli, ctx, *quotationResponse, quotationRequest.ConnectionId)
+		gateway.NotifyQuotation(ctx, &snscli, *quotationResponse)
 	}
 
 	return err

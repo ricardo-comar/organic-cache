@@ -5,12 +5,12 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/ricardo-comar/organic-cache/user_subscribe/model"
+	"github.com/ricardo-comar/organic-cache/lib_common/entity"
 )
 
-func CreateEntity(body string) (model.UserEntity, error) {
+func CreateEntity(body string) (entity.UserEntity, error) {
 
-	message := model.UserEntity{}
+	message := entity.UserEntity{}
 	json.Unmarshal([]byte(body), &message)
 
 	message.TTL = strconv.FormatInt(time.Now().Add(time.Minute*5).UnixNano(), 10)

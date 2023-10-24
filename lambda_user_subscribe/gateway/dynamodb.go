@@ -5,7 +5,7 @@ import (
 	"log"
 	"os"
 
-	"github.com/ricardo-comar/organic-cache/user_subscribe/model"
+	"github.com/ricardo-comar/organic-cache/lib_common/entity"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/feature/dynamodb/attributevalue"
@@ -13,7 +13,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
 )
 
-func SaveActiveUser(cli *dynamodb.Client, user model.UserEntity) error {
+func SaveActiveUser(cli *dynamodb.Client, user entity.UserEntity) error {
 
 	log.Printf("Saving user %s", user)
 	item, err := attributevalue.MarshalMap(user)
@@ -28,7 +28,7 @@ func SaveActiveUser(cli *dynamodb.Client, user model.UserEntity) error {
 	return err
 }
 
-func QuerySubscription(cli *dynamodb.Client, userId string) (*model.UserEntity, error) {
+func QuerySubscription(cli *dynamodb.Client, userId string) (*entity.UserEntity, error) {
 
 	output, err := cli.GetItem(context.TODO(), &dynamodb.GetItemInput{
 		TableName: aws.String(os.Getenv("ACTIVE_USERS_TABLE")),
@@ -38,7 +38,7 @@ func QuerySubscription(cli *dynamodb.Client, userId string) (*model.UserEntity, 
 	})
 
 	if err == nil && output.Item != nil {
-		userSub := model.UserEntity{}
+		userSub := entity.UserEntity{}
 		err = attributevalue.UnmarshalMap(output.Item, &userSub)
 		return &userSub, err
 	}

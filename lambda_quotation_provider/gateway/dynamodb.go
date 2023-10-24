@@ -8,10 +8,10 @@ import (
 	"github.com/aws/aws-sdk-go-v2/feature/dynamodb/attributevalue"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
-	"github.com/ricardo-comar/organic-cache/quotation_provider/model"
+	"github.com/ricardo-comar/organic-cache/lib_common/entity"
 )
 
-func QueryProductPrice(cli dynamodb.Client, userId string) (*model.UserPricesEntity, error) {
+func QueryProductPrice(cli dynamodb.Client, userId string) (*entity.UserPricesEntity, error) {
 
 	output, err := cli.GetItem(context.TODO(), &dynamodb.GetItemInput{
 		TableName: aws.String(os.Getenv("USER_PRICES_TABLE")),
@@ -21,7 +21,7 @@ func QueryProductPrice(cli dynamodb.Client, userId string) (*model.UserPricesEnt
 	})
 
 	if err == nil && output.Item != nil {
-		userPrices := model.UserPricesEntity{}
+		userPrices := entity.UserPricesEntity{}
 		err = attributevalue.UnmarshalMap(output.Item, &userPrices)
 		return &userPrices, err
 	}
@@ -30,7 +30,7 @@ func QueryProductPrice(cli dynamodb.Client, userId string) (*model.UserPricesEnt
 
 }
 
-func QueryRequest(cli dynamodb.Client, requestId string) (*model.QuotationRequest, error) {
+func QueryRequest(cli dynamodb.Client, requestId string) (*entity.QuotationEntity, error) {
 
 	output, err := cli.GetItem(context.TODO(), &dynamodb.GetItemInput{
 		TableName: aws.String(os.Getenv("QUOTATIONS_TABLE")),
@@ -40,7 +40,7 @@ func QueryRequest(cli dynamodb.Client, requestId string) (*model.QuotationReques
 	})
 
 	if err == nil && output.Item != nil {
-		request := model.QuotationRequest{}
+		request := entity.QuotationEntity{}
 		err = attributevalue.UnmarshalMap(output.Item, &request)
 		return &request, err
 	}

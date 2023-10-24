@@ -28,4 +28,4 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/sns v1.20.4
 )
 
-replace github.com/ricardo-comar/organic-cache/price_calc/lib_common => ../lib_common
+replace github.com/ricardo-comar/organic-cache/lib_common => ../lib_common

@@ -7,10 +7,10 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/feature/dynamodb/attributevalue"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
-	"github.com/ricardo-comar/organic-cache/quotation_handler/model"
+	"github.com/ricardo-comar/organic-cache/lib_common/entity"
 )
 
-func SaveQuotationRequest(dyncli *dynamodb.Client, req *model.QuotationRequest) error {
+func SaveQuotationRequest(dyncli *dynamodb.Client, req entity.QuotationEntity) error {
 
 	item, err := attributevalue.MarshalMap(req)
 

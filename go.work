@@ -1,0 +1,10 @@
+go 1.21.3
+
+use (
+	./lambda_cache_refresh
+	./lambda_price_calc
+	./lambda_quotation_handler
+	./lambda_quotation_provider
+	./lambda_user_subscribe
+	./lib_common
+)
