@@ -6,19 +6,34 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
-	"github.com/aws/aws-sdk-go-v2/service/sns"
 	"github.com/ricardo-comar/organic-cache/lib_common/api"
 	"github.com/ricardo-comar/organic-cache/lib_common/entity"
 	"github.com/ricardo-comar/organic-cache/lib_common/message"
 	"github.com/ricardo-comar/organic-cache/quotation_handler/gateway"
 )
 
-func RequestQuotation(ctx context.Context, snscli *sns.Client, dyncli *dynamodb.Client, req api.QuotationRequest) error {
+type requestService struct {
+	dg   gateway.DynamoGateway
+	snsg gateway.SNSGateway
+}
+
+func NewRequestService(dg gateway.DynamoGateway, snsg gateway.SNSGateway) RequestService {
+	rs := &requestService{
+		dg:   dg,
+		snsg: snsg,
+	}
+	return RequestService(rs)
+}
+
+type RequestService interface {
+	RequestQuotation(ctx context.Context, req api.QuotationRequest) error
+}
+
+func (rs requestService) RequestQuotation(ctx context.Context, req api.QuotationRequest) error {
 
 	log.Printf("Saving quotation: %+v", req)
 
-	err := gateway.SaveQuotationRequest(dyncli, entity.QuotationEntity{
+	err := rs.dg.SaveQuotationRequest(entity.QuotationEntity{
 		RequestId:   req.RequestId,
 		UserId:      req.UserId,
 		ProductList: req.Products,
@@ -30,7 +45,7 @@ func RequestQuotation(ctx context.Context, snscli *sns.Client, dyncli *dynamodb.
 	}
 
 	log.Printf("Notifying quotation: %+v", req)
-	_, err = gateway.NotifyQuotation(ctx, snscli, message.UserPricesMessage{
+	_, err = rs.snsg.NotifyQuotation(ctx, message.UserPricesMessage{
 		RequestId: req.RequestId,
 		UserId:    req.UserId,
 	})

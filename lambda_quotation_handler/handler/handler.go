@@ -5,47 +5,28 @@ import (
 	"encoding/json"
 	"log"
 	"net/http"
-	"os"
 
 	"github.com/aws/aws-lambda-go/events"
 	"github.com/aws/aws-lambda-go/lambda"
-	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/config"
-	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
-	"github.com/aws/aws-sdk-go-v2/service/sns"
-	"github.com/aws/aws-sdk-go-v2/service/sqs"
 	"github.com/ricardo-comar/organic-cache/lib_common/api"
+	"github.com/ricardo-comar/organic-cache/quotation_handler/gateway"
 	"github.com/ricardo-comar/organic-cache/quotation_handler/service"
 )
 
-var cfg aws.Config
-var snscli *sns.Client
-var sqscli *sqs.Client
-var dyncli *dynamodb.Client
-
-func init() {
-	cfg, _ = config.LoadDefaultConfig(context.TODO(), func(o *config.LoadOptions) error {
-		o.Region = os.Getenv("AWS_REGION")
-		return nil
-	})
-
-	dyncli = dynamodb.NewFromConfig(cfg)
-	snscli = sns.NewFromConfig(cfg)
-	sqscli = sqs.NewFromConfig(cfg)
-
-	localendpoint, found := os.LookupEnv("LOCALSTACK_HOSTNAME")
-	if found {
-		dyncli = dynamodb.NewFromConfig(cfg, dynamodb.WithEndpointResolver(dynamodb.EndpointResolverFromURL("http://"+localendpoint+":4566")))
-		snscli = sns.New(sns.Options{Credentials: cfg.Credentials, EndpointResolver: sns.EndpointResolverFromURL("http://" + localendpoint + ":" + os.Getenv("EDGE_PORT"))})
-		sqscli = sqs.New(sqs.Options{Credentials: cfg.Credentials, EndpointResolver: sqs.EndpointResolverFromURL("http://" + localendpoint + ":" + os.Getenv("EDGE_PORT"))})
-	}
-}
-
 func main() {
-	lambda.Start(handleRequest)
+	lambdaHandler := awsHandler{
+		reqSrv: service.NewRequestService(gateway.NewDynamoGateway(), gateway.NewSNSGateway()),
+		rspSrv: service.NewResponseService(gateway.NewSQSGateway()),
+	}
+	lambda.Start(lambdaHandler.handleRequest)
 }
 
-func handleRequest(ctx context.Context, request events.APIGatewayProxyRequest) (events.APIGatewayProxyResponse, error) {
+type awsHandler struct {
+	reqSrv service.RequestService
+	rspSrv service.ResponseService
+}
+
+func (l awsHandler) handleRequest(ctx context.Context, request events.APIGatewayProxyRequest) (events.APIGatewayProxyResponse, error) {
 
 	req := api.QuotationRequest{RequestId: request.RequestContext.RequestID}
 	err := json.Unmarshal([]byte(request.Body), &req)
@@ -55,13 +36,13 @@ func handleRequest(ctx context.Context, request events.APIGatewayProxyRequest) (
 	}
 	log.Printf("Message: %+v", req)
 
-	err = service.RequestQuotation(ctx, snscli, dyncli, req)
+	err = l.reqSrv.RequestQuotation(ctx, req)
 	if err != nil {
 		log.Printf("Error saving quotation request: %+v", err)
 		return events.APIGatewayProxyResponse{StatusCode: http.StatusInternalServerError}, err
 	}
 
-	response, err := service.WaitForResponse(ctx, sqscli, req.RequestId)
+	response, err := l.rspSrv.WaitForResponse(ctx, req.RequestId)
 
 	if err == nil {
 		log.Printf("Response: %+v", response)

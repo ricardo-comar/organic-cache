@@ -7,11 +7,29 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/sqs"
 	"github.com/aws/aws-sdk-go-v2/service/sqs/types"
+	"github.com/ricardo-comar/organic-cache/lib_common/gateway"
 )
 
-func ReceiveMessage(ctx context.Context, sqscli *sqs.Client) (*sqs.ReceiveMessageOutput, error) {
+type sqsCxt struct {
+	sqscli *sqs.Client
+}
 
-	result, err := sqscli.ReceiveMessage(ctx, &sqs.ReceiveMessageInput{
+func NewSQSGateway() SQSGateway {
+	ctx := &sqsCxt{sqscli: gateway.InitSQSClient()}
+	gtw := SQSGateway(ctx)
+
+	return gtw
+}
+
+type SQSGateway interface {
+	ReceiveMessage(ctx context.Context) (*sqs.ReceiveMessageOutput, error)
+	ChangeMessageVisibility(ctx context.Context, msgReceiptHandle *string) error
+	DeleteMessage(ctx context.Context, msgReceiptHandle *string) error
+}
+
+func (gtw sqsCxt) ReceiveMessage(ctx context.Context) (*sqs.ReceiveMessageOutput, error) {
+
+	result, err := gtw.sqscli.ReceiveMessage(ctx, &sqs.ReceiveMessageInput{
 		QueueUrl:              aws.String(os.Getenv("QUOTATIONS_QUEUE")),
 		MaxNumberOfMessages:   1,
 		WaitTimeSeconds:       3,
@@ -22,9 +40,9 @@ func ReceiveMessage(ctx context.Context, sqscli *sqs.Client) (*sqs.ReceiveMessag
 	return result, err
 }
 
-func ChangeMessageVisibility(ctx context.Context, sqscli *sqs.Client, msgReceiptHandle *string) error {
+func (gtw sqsCxt) ChangeMessageVisibility(ctx context.Context, msgReceiptHandle *string) error {
 
-	_, err := sqscli.ChangeMessageVisibility(ctx, &sqs.ChangeMessageVisibilityInput{
+	_, err := gtw.sqscli.ChangeMessageVisibility(ctx, &sqs.ChangeMessageVisibilityInput{
 		QueueUrl:          aws.String(os.Getenv("QUOTATIONS_QUEUE")),
 		ReceiptHandle:     msgReceiptHandle,
 		VisibilityTimeout: 1,
@@ -33,9 +51,9 @@ func ChangeMessageVisibility(ctx context.Context, sqscli *sqs.Client, msgReceipt
 	return err
 }
 
-func DeleteMessage(ctx context.Context, sqscli *sqs.Client, msgReceiptHandle *string) error {
+func (gtw sqsCxt) DeleteMessage(ctx context.Context, msgReceiptHandle *string) error {
 
-	_, err := sqscli.DeleteMessage(ctx, &sqs.DeleteMessageInput{
+	_, err := gtw.sqscli.DeleteMessage(ctx, &sqs.DeleteMessageInput{
 		QueueUrl:      aws.String(os.Getenv("QUOTATIONS_QUEUE")),
 		ReceiptHandle: msgReceiptHandle,
 	})

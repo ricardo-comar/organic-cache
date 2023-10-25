@@ -4,55 +4,33 @@ import (
 	"context"
 	"encoding/json"
 	"log"
-	"os"
 	"time"
 
 	"github.com/aws/aws-lambda-go/events"
 	"github.com/aws/aws-lambda-go/lambda"
-	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/config"
-	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
-	"github.com/aws/aws-sdk-go-v2/service/sqs"
 	"github.com/ricardo-comar/organic-cache/lib_common/message"
 	"github.com/ricardo-comar/organic-cache/lib_common/model"
 	"github.com/ricardo-comar/organic-cache/quotation_provider/gateway"
 )
 
-var cfg aws.Config
-var dyncli dynamodb.Client
-var sqscli sqs.Client
-
-func init() {
-	cfg, _ = config.LoadDefaultConfig(context.TODO(), func(o *config.LoadOptions) error {
-		o.Region = os.Getenv("AWS_REGION")
-		return nil
-	})
-
-	// apiPath := os.Getenv("API_PATH")
-
-	dyncli = *dynamodb.NewFromConfig(cfg)
-	sqscli = *sqs.NewFromConfig(cfg)
-
-	localendpoint, found := os.LookupEnv("LOCALSTACK_HOSTNAME")
-	if found {
-		localhost := "http://" + localendpoint + ":" + os.Getenv("EDGE_PORT")
-		dyncli = *dynamodb.NewFromConfig(cfg, dynamodb.WithEndpointResolver(dynamodb.EndpointResolverFromURL(localhost)))
-		sqscli = *sqs.New(sqs.Options{Credentials: cfg.Credentials, EndpointResolver: sqs.EndpointResolverFromURL(localhost)})
-	}
-}
-
 func main() {
-	lambda.Start(handleMessages)
+	lambdaHandler := awsHandler{dynGtw: gateway.NewDynamoGateway(), sqsGtw: gateway.NewSQSGateway()}
+	lambda.Start(lambdaHandler.handleMessages)
 }
 
-func handleMessages(ctx context.Context, snsEvent events.SNSEvent) error {
+type awsHandler struct {
+	dynGtw gateway.DynamoGateway
+	sqsGtw gateway.SQSGateway
+}
+
+func (l awsHandler) handleMessages(ctx context.Context, snsEvent events.SNSEvent) error {
 
 	inicioProc := time.Now()
 
 	for _, record := range snsEvent.Records {
 		inicioMsg := time.Now()
 
-		err := handleMessage(ctx, record)
+		err := handleMessage(l, ctx, record)
 		if err != nil {
 			log.Printf("Erro processando mensagem: %+v", err)
 		}
@@ -64,7 +42,7 @@ func handleMessages(ctx context.Context, snsEvent events.SNSEvent) error {
 	return nil
 }
 
-func handleMessage(ctx context.Context, event events.SNSEventRecord) error {
+func handleMessage(l awsHandler, ctx context.Context, event events.SNSEventRecord) error {
 
 	log.Printf("Processando mensagem: %+v", event)
 
@@ -74,7 +52,7 @@ func handleMessage(ctx context.Context, event events.SNSEventRecord) error {
 		return err
 	}
 
-	productPrices, err := gateway.QueryProductPrice(dyncli, msg.UserId)
+	productPrices, err := l.dynGtw.QueryProductPrice(msg.UserId)
 	if err != nil {
 		log.Printf("Erro buscando por produtos calculados: %+v", err)
 		return err
@@ -83,7 +61,7 @@ func handleMessage(ctx context.Context, event events.SNSEventRecord) error {
 	if productPrices == nil {
 
 		log.Println("Nenhuma cotação encontrada, solicitando tabela de preços")
-		gateway.RecalcMessage(ctx, &sqscli, &msg)
+		l.sqsGtw.RecalcMessage(ctx, &msg)
 
 	} else {
 
@@ -92,7 +70,7 @@ func handleMessage(ctx context.Context, event events.SNSEventRecord) error {
 		quotationResponse.UserId = msg.UserId
 		quotationResponse.Products = []model.ProductQuotation{}
 
-		quotationRequest, err := gateway.QueryRequest(dyncli, msg.RequestId)
+		quotationRequest, err := l.dynGtw.QueryRequest(msg.RequestId)
 
 		if err != nil {
 			log.Printf("Erro ao recuperar o quotation request em base : %+v", err)
@@ -124,7 +102,7 @@ func handleMessage(ctx context.Context, event events.SNSEventRecord) error {
 		}
 
 		log.Printf("Cotação realizada: %+v", *quotationResponse)
-		gateway.NotifyQuotation(ctx, &sqscli, *quotationResponse)
+		l.sqsGtw.NotifyQuotation(ctx, *quotationResponse)
 	}
 
 	return err

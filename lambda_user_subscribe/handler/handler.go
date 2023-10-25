@@ -4,58 +4,39 @@ import (
 	"context"
 	"log"
 	"net/http"
-	"os"
 
 	"github.com/aws/aws-lambda-go/events"
 	"github.com/aws/aws-lambda-go/lambda"
-	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/config"
-	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
-	"github.com/aws/aws-sdk-go-v2/service/sqs"
+	"github.com/ricardo-comar/organic-cache/lib_common/entity"
 	"github.com/ricardo-comar/organic-cache/lib_common/message"
 	"github.com/ricardo-comar/organic-cache/user_subscribe/gateway"
-	"github.com/ricardo-comar/organic-cache/user_subscribe/service"
 )
 
-var cfg aws.Config
-var dyncli dynamodb.Client
-var sqscli sqs.Client
-
-func init() {
-	cfg, _ = config.LoadDefaultConfig(context.TODO(), func(o *config.LoadOptions) error {
-		o.Region = os.Getenv("AWS_REGION")
-		return nil
-	})
-
-	dyncli = *dynamodb.NewFromConfig(cfg)
-	sqscli = *sqs.NewFromConfig(cfg)
-
-	localendpoint, found := os.LookupEnv("LOCALSTACK_HOSTNAME")
-	if found {
-		dyncli = *dynamodb.NewFromConfig(cfg, dynamodb.WithEndpointResolver(dynamodb.EndpointResolverFromURL("http://"+localendpoint+":4566")))
-		sqscli = *sqs.New(sqs.Options{Credentials: cfg.Credentials, EndpointResolver: sqs.EndpointResolverFromURL("http://" + localendpoint + ":" + os.Getenv("EDGE_PORT"))})
-	}
-}
-
 func main() {
-	lambda.Start(handleRequest)
+	lambdaHandler := awsHandler{dynGtw: gateway.NewDynamoGateway(), sqsGtw: gateway.NewSQSGateway()}
+	lambda.Start(lambdaHandler.handleRequest)
 }
 
-func handleRequest(ctx context.Context, request events.APIGatewayProxyRequest) (events.APIGatewayProxyResponse, error) {
+type awsHandler struct {
+	dynGtw gateway.DynamoGateway
+	sqsGtw gateway.SQSGateway
+}
 
-	entity, err := service.CreateEntity(request.Body)
+func (l awsHandler) handleRequest(ctx context.Context, request events.APIGatewayProxyRequest) (events.APIGatewayProxyResponse, error) {
+
+	entity, err := entity.NewUserEntity(request.Body)
 	if err != nil {
 		log.Println("Invalid content: ", request.Body)
 		return events.APIGatewayProxyResponse{StatusCode: http.StatusBadRequest}, err
 	}
 
-	userSub, err := gateway.QuerySubscription(&dyncli, entity.UserId)
+	userSub, err := l.dynGtw.QuerySubscription(entity.UserId)
 	if err == nil && userSub == nil {
 		log.Println("New subscription, asking for price recalculation: ", entity.UserId)
-		gateway.SendMessage(ctx, &sqscli, &message.UserMessage{UserId: entity.UserId})
+		l.sqsGtw.SendMessage(ctx, &message.UserMessage{UserId: entity.UserId})
 	}
 
-	err = gateway.SaveActiveUser(&dyncli, entity)
+	err = l.dynGtw.SaveActiveUser(entity)
 	if err != nil {
 		log.Println("Error saving subscription: ", err)
 		return events.APIGatewayProxyResponse{StatusCode: http.StatusInternalServerError}, err

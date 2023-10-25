@@ -9,12 +9,30 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
 	"github.com/ricardo-comar/organic-cache/lib_common/entity"
+	"github.com/ricardo-comar/organic-cache/lib_common/gateway"
 	"github.com/ricardo-comar/organic-cache/lib_common/message"
 )
 
-func QueryUserDiscounts(dyncli *dynamodb.Client, user *message.UserMessage) (*entity.DiscountEntity, error) {
+type dynamoCxt struct {
+	dyncli *dynamodb.Client
+}
 
-	output, err := dyncli.GetItem(context.TODO(), &dynamodb.GetItemInput{
+func NewDynamoGateway() DynamoGateway {
+	dg := &dynamoCxt{dyncli: gateway.InitDynamoClient()}
+	gtw := DynamoGateway(dg)
+
+	return gtw
+}
+
+type DynamoGateway interface {
+	QueryUserDiscounts(user *message.UserMessage) (*entity.DiscountEntity, error)
+	ScanProducts() (*[]entity.ProductEntity, error)
+	SaveUserPrices(prices *entity.UserPricesEntity) error
+}
+
+func (dg dynamoCxt) QueryUserDiscounts(user *message.UserMessage) (*entity.DiscountEntity, error) {
+
+	output, err := dg.dyncli.GetItem(context.TODO(), &dynamodb.GetItemInput{
 		TableName: aws.String(os.Getenv("USER_DISCOUNTS_TABLE")),
 		Key: map[string]types.AttributeValue{
 			"user_id": &types.AttributeValueMemberS{Value: user.UserId},
@@ -30,11 +48,11 @@ func QueryUserDiscounts(dyncli *dynamodb.Client, user *message.UserMessage) (*en
 	return discounts, err
 }
 
-func ScanProducts(dyncli *dynamodb.Client) (*[]entity.ProductEntity, error) {
+func (dg dynamoCxt) ScanProducts() (*[]entity.ProductEntity, error) {
 
 	var totalProducts []entity.ProductEntity
 
-	input := dynamodb.NewScanPaginator(dyncli, &dynamodb.ScanInput{
+	input := dynamodb.NewScanPaginator(dg.dyncli, &dynamodb.ScanInput{
 		TableName: aws.String(os.Getenv("PRODUCTS_TABLE")),
 	})
 
@@ -56,12 +74,12 @@ func ScanProducts(dyncli *dynamodb.Client) (*[]entity.ProductEntity, error) {
 	return &totalProducts, nil
 }
 
-func SaveUserPrices(dyncli *dynamodb.Client, prices *entity.UserPricesEntity) error {
+func (dg dynamoCxt) SaveUserPrices(prices *entity.UserPricesEntity) error {
 
 	item, err := attributevalue.MarshalMap(prices)
 
 	if err == nil {
-		_, err = dyncli.PutItem(context.TODO(), &dynamodb.PutItemInput{
+		_, err = dg.dyncli.PutItem(context.TODO(), &dynamodb.PutItemInput{
 			TableName: aws.String(os.Getenv("USER_PRICES_TABLE")),
 			Item:      item,
 		})

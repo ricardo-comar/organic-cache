@@ -1,4 +1,4 @@
-package service
+package entity
 
 import (
 	"encoding/json"
@@ -18,7 +18,7 @@ func TestIntMinTableDriven(t *testing.T) {
 	body := Body{ID: "ABC"}
 	bodyStr, _ := json.Marshal(body)
 
-	entity, err := CreateEntity(string(bodyStr))
+	entity, err := NewUserEntity(string(bodyStr))
 
 	assert.Nil(t, err, "Unexpected error")
 	assert.NotNil(t, entity, "Unexpected nil entity")

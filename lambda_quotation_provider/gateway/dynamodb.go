@@ -9,11 +9,28 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
 	"github.com/ricardo-comar/organic-cache/lib_common/entity"
+	"github.com/ricardo-comar/organic-cache/lib_common/gateway"
 )
 
-func QueryProductPrice(cli dynamodb.Client, userId string) (*entity.UserPricesEntity, error) {
+type dynamoCxt struct {
+	dyncli *dynamodb.Client
+}
 
-	output, err := cli.GetItem(context.TODO(), &dynamodb.GetItemInput{
+func NewDynamoGateway() DynamoGateway {
+	dg := &dynamoCxt{dyncli: gateway.InitDynamoClient()}
+	gtw := DynamoGateway(dg)
+
+	return gtw
+}
+
+type DynamoGateway interface {
+	QueryProductPrice(userId string) (*entity.UserPricesEntity, error)
+	QueryRequest(requestId string) (*entity.QuotationEntity, error)
+}
+
+func (dg dynamoCxt) QueryProductPrice(userId string) (*entity.UserPricesEntity, error) {
+
+	output, err := dg.dyncli.GetItem(context.TODO(), &dynamodb.GetItemInput{
 		TableName: aws.String(os.Getenv("USER_PRICES_TABLE")),
 		Key: map[string]types.AttributeValue{
 			"user_id": &types.AttributeValueMemberS{Value: userId},
@@ -30,9 +47,9 @@ func QueryProductPrice(cli dynamodb.Client, userId string) (*entity.UserPricesEn
 
 }
 
-func QueryRequest(cli dynamodb.Client, requestId string) (*entity.QuotationEntity, error) {
+func (dg dynamoCxt) QueryRequest(requestId string) (*entity.QuotationEntity, error) {
 
-	output, err := cli.GetItem(context.TODO(), &dynamodb.GetItemInput{
+	output, err := dg.dyncli.GetItem(context.TODO(), &dynamodb.GetItemInput{
 		TableName: aws.String(os.Getenv("QUOTATIONS_TABLE")),
 		Key: map[string]types.AttributeValue{
 			"request_id": &types.AttributeValueMemberS{Value: requestId},
