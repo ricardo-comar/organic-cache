@@ -10,5 +10,5 @@ resource "aws_sqs_queue" "price_recalc_queue" {
 resource "aws_sqs_queue" "quotation_queue" {
   name                      = "organic-cache-sqs-quotation"
   max_message_size          = 20480
-  message_retention_seconds = 86400
+  message_retention_seconds = 60
 }

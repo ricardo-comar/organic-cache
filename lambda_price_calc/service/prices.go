@@ -5,10 +5,11 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
 	"github.com/ricardo-comar/organic-cache/lib_common/entity"
+	"github.com/ricardo-comar/organic-cache/lib_common/message"
 	"github.com/ricardo-comar/organic-cache/price_calc/gateway"
 )
 
-func GenerateUserPrices(dyncli *dynamodb.Client, user *entity.UserEntity) error {
+func GenerateUserPrices(dyncli *dynamodb.Client, user *message.UserMessage) error {
 
 	products, err := gateway.ScanProducts(dyncli)
 	if err != nil {

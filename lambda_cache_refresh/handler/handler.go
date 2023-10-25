@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/ricardo-comar/organic-cache/cache_refresh/gateway"
+	"github.com/ricardo-comar/organic-cache/lib_common/message"
 
 	"github.com/aws/aws-lambda-go/events"
 	"github.com/aws/aws-lambda-go/lambda"
@@ -49,11 +50,11 @@ func eventHandler(ctx context.Context, event events.CloudWatchEvent) (events.Clo
 	log.Printf("%d usuários encontrados", len(users))
 
 	for _, user := range users {
-		msgId, _ := gateway.SendMessage(ctx, &sqscli, user)
+		msgId, _ := gateway.SendMessage(ctx, &sqscli, &message.UserMessage{UserId: user.UserId})
 		log.Printf("Usuário %s enviado: %s", user.UserId, *msgId)
 	}
 
-	log.Printf("Finalizando com %d usuários em %dms", len(users), time.Now().Sub(inicio).Milliseconds())
+	log.Printf("Finalizando com %d usuários em %dms", len(users), time.Since(inicio).Milliseconds())
 
 	return event, error
 

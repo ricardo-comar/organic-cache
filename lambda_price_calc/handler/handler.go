@@ -13,7 +13,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
 	"github.com/aws/aws-sdk-go-v2/service/sns"
-	"github.com/ricardo-comar/organic-cache/lib_common/entity"
 	"github.com/ricardo-comar/organic-cache/lib_common/message"
 
 	"github.com/ricardo-comar/organic-cache/price_calc/gateway"
@@ -52,7 +51,7 @@ func handleMessages(ctx context.Context, sqsEvent events.SQSEvent) error {
 		inicioMsg := time.Now()
 
 		log.Printf("Processando mensagem: %s", record.Body)
-		user := entity.UserEntity{}
+		user := message.UserMessage{}
 		json.Unmarshal([]byte(record.Body), &user)
 
 		err := service.GenerateUserPrices(&dyncli, &user)

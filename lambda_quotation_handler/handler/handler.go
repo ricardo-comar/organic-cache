@@ -47,7 +47,7 @@ func main() {
 
 func handleRequest(ctx context.Context, request events.APIGatewayProxyRequest) (events.APIGatewayProxyResponse, error) {
 
-	req := api.QuotationRequest{}
+	req := api.QuotationRequest{RequestId: request.RequestContext.RequestID}
 	err := json.Unmarshal([]byte(request.Body), &req)
 	if err != nil {
 		log.Printf("Error parsing request: %+v", err)
@@ -55,13 +55,13 @@ func handleRequest(ctx context.Context, request events.APIGatewayProxyRequest) (
 	}
 	log.Printf("Message: %+v", req)
 
-	err = service.RequestQuotation(ctx, snscli, dyncli, req, request.RequestContext.RequestID)
+	err = service.RequestQuotation(ctx, snscli, dyncli, req)
 	if err != nil {
 		log.Printf("Error saving quotation request: %+v", err)
 		return events.APIGatewayProxyResponse{StatusCode: http.StatusInternalServerError}, err
 	}
 
-	response, err := service.WaitForResponse(ctx, sqscli, request.RequestContext.RequestID)
+	response, err := service.WaitForResponse(ctx, sqscli, req.RequestId)
 
 	if err == nil {
 		log.Printf("Response: %+v", response)

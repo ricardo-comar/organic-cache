@@ -12,6 +12,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
 	"github.com/aws/aws-sdk-go-v2/service/sqs"
+	"github.com/ricardo-comar/organic-cache/lib_common/message"
 	"github.com/ricardo-comar/organic-cache/user_subscribe/gateway"
 	"github.com/ricardo-comar/organic-cache/user_subscribe/service"
 )
@@ -51,7 +52,7 @@ func handleRequest(ctx context.Context, request events.APIGatewayProxyRequest) (
 	userSub, err := gateway.QuerySubscription(&dyncli, entity.UserId)
 	if err == nil && userSub == nil {
 		log.Println("New subscription, asking for price recalculation: ", entity.UserId)
-		gateway.SendMessage(ctx, &sqscli, userSub)
+		gateway.SendMessage(ctx, &sqscli, &message.UserMessage{UserId: entity.UserId})
 	}
 
 	err = gateway.SaveActiveUser(&dyncli, entity)

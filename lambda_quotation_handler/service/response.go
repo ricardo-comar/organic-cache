@@ -3,14 +3,13 @@ package service
 import (
 	"context"
 	"encoding/json"
-	"fmt"
-	"os"
+	"log"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/service/sqs"
-	"github.com/aws/aws-sdk-go-v2/service/sqs/types"
 	"github.com/ricardo-comar/organic-cache/lib_common/api"
 	"github.com/ricardo-comar/organic-cache/lib_common/message"
+	"github.com/ricardo-comar/organic-cache/quotation_handler/gateway"
 )
 
 type TimeoutError struct {
@@ -20,86 +19,83 @@ func (*TimeoutError) Error() string {
 	return "Timeout waiting for response"
 }
 
-var queueURL = os.Getenv("QUOTATIONS_QUEUE")
 var timeout = 10 * time.Second
+
+type MessageChannel struct {
+	Resp  api.QuotationResponse
+	Error error
+}
 
 func WaitForResponse(ctx context.Context, sqscli *sqs.Client, requestId string) (*api.QuotationResponse, error) {
 
-	taskCompleted := make(chan bool)
-	response := make(chan *api.QuotationResponse)
-	err := make(chan error)
+	response := make(chan MessageChannel)
 
-	go waitForMessage(taskCompleted, response, err, ctx, sqscli, requestId)
+	go waitForMessage(response, ctx, sqscli, requestId)
 
 	select {
 
-	case <-taskCompleted:
-		fmt.Println("Processamento finalizado")
-		return <-response, <-err
+	case resp := <-response:
+		log.Println("Processamento finalizado")
+		return &resp.Resp, resp.Error
 
 	case <-time.After(timeout):
-		fmt.Println("Timeout! A tarefa demorou muito para ser concluída.")
+		log.Println("Timeout! A tarefa demorou muito para ser concluída.")
 		return nil, &TimeoutError{}
 	}
 
 }
 
-func waitForMessage(done chan bool, response chan *api.QuotationResponse, errChan chan error, ctx context.Context, sqscli *sqs.Client, requestId string) {
+func waitForMessage(response chan MessageChannel, ctx context.Context, sqscli *sqs.Client, requestId string) {
 
 	for {
-		result, err := sqscli.ReceiveMessage(ctx, &sqs.ReceiveMessageInput{
-			QueueUrl:              &queueURL,
-			MaxNumberOfMessages:   1,
-			WaitTimeSeconds:       3,
-			AttributeNames:        []types.QueueAttributeName{"All"},
-			MessageAttributeNames: []string{"All"},
-		})
+
+		result, err := gateway.ReceiveMessage(ctx, sqscli)
 
 		if err != nil {
-			fmt.Println("Erro ao receber mensagem:", err)
-			errChan <- err
-			done <- true
+			log.Println("Erro ao receber mensagem:", err)
+			response <- MessageChannel{Error: err}
+			return
 		}
 
 		for _, msg := range result.Messages {
-			request_id := msg.MessageAttributes["RequestId"].StringValue
 
-			if requestId, found := msg.MessageAttributes["RequestId"]; found && *request_id == *requestId.StringValue {
+			if reqId, found := msg.MessageAttributes["RequestId"]; found && requestId == *reqId.StringValue {
+				log.Println("Mensagem relevante:", *msg.Body)
 
-				fmt.Println("Mensagem relevante:", *msg.Body)
 				quotation := message.QuotationMessage{}
 				json.Unmarshal([]byte(*msg.Body), &quotation)
 				if err != nil {
-					fmt.Println("Erro ao transformar mensagem em struct:", err)
-					errChan <- err
-					done <- true
+					log.Println("Erro ao transformar mensagem em struct:", err)
+					response <- MessageChannel{Error: err}
+					return
 				}
 
-				_, err := sqscli.DeleteMessage(ctx, &sqs.DeleteMessageInput{
-					QueueUrl:      &queueURL,
-					ReceiptHandle: msg.ReceiptHandle,
-				})
+				log.Println("Removendo a mensagem:", msg.ReceiptHandle)
+				gateway.DeleteMessage(ctx, sqscli, msg.ReceiptHandle)
+
 				if err != nil {
-					fmt.Println("Erro ao excluir a mensagem:", err)
-					errChan <- err
-					done <- true
+					log.Println("Erro ao remover a mensagem:", err)
+					response <- MessageChannel{Error: err}
+					return
 				}
-
-				response <- &api.QuotationResponse{
+				resp := api.QuotationResponse{
 					RequestId: quotation.RequestId,
 					UserId:    quotation.UserId,
 					Products:  quotation.Products,
 				}
-				done <- true
+				log.Printf("Resposta: %+v", resp)
+
+				response <- MessageChannel{Resp: resp}
+				return
+
 			} else {
 
-				_, err := sqscli.ChangeMessageVisibility(ctx, &sqs.ChangeMessageVisibilityInput{
-					QueueUrl:          &queueURL,
-					ReceiptHandle:     msg.ReceiptHandle,
-					VisibilityTimeout: 0, // Defina para 0 para devolver imediatamente à fila
-				})
+				err = gateway.ChangeMessageVisibility(ctx, sqscli, msg.ReceiptHandle)
+
 				if err != nil {
-					fmt.Println("Erro ao devolver a mensagem à fila:", err)
+					log.Println("Erro ao devolver a mensagem à fila:", err)
+					response <- MessageChannel{Error: err}
+					return
 				}
 			}
 

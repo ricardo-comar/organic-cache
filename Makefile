@@ -25,11 +25,6 @@ package: build
 			zip -j bin/$$dir.zip bin/$$dir; \
 		done
 
-deploy: package
-	cd terraform
-	tflocal init
-	tflocal apply --auto-approve
-
 localstack:
 	aws --endpoint http://localhost:4566 iam create-user --user-name test
 	
@@ -42,6 +37,10 @@ scan:
 
 update-lambda:
 
+	rm bin/lambda_$(lambda)*
+	echo "Updating lambda_$(lambda)" 
+	GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go build -o bin/lambda_$(lambda) lambda_$(lambda)/handler/handler.go 
+	zip -j bin/lambda_$(lambda).zip bin/lambda_$(lambda)
 	aws --endpoint-url http://localhost:4566 lambda update-function-code --function-name $(lambda) --zip-file fileb://bin/lambda_$(lambda).zip --output text
 
 

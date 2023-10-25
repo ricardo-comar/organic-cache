@@ -20,6 +20,7 @@ resource "aws_lambda_function" "quotation_provider" {
   environment {
     variables = {
       USER_PRICES_TABLE = aws_dynamodb_table.user_prices.name
+      QUOTATIONS_TABLE  = aws_dynamodb_table.quotations.name
       RECALC_QUEUE      = aws_sqs_queue.price_recalc_queue.url
       QUOTATIONS_QUEUE  = aws_sqs_queue.quotation_queue.url
     }

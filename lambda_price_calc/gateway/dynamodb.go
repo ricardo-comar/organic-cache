@@ -9,9 +9,10 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
 	"github.com/ricardo-comar/organic-cache/lib_common/entity"
+	"github.com/ricardo-comar/organic-cache/lib_common/message"
 )
 
-func QueryUserDiscounts(dyncli *dynamodb.Client, user *entity.UserEntity) (*entity.DiscountEntity, error) {
+func QueryUserDiscounts(dyncli *dynamodb.Client, user *message.UserMessage) (*entity.DiscountEntity, error) {
 
 	output, err := dyncli.GetItem(context.TODO(), &dynamodb.GetItemInput{
 		TableName: aws.String(os.Getenv("USER_DISCOUNTS_TABLE")),

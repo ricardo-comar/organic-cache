@@ -14,8 +14,9 @@ import (
 
 func RecalcMessage(ctx context.Context, cli *sqs.Client, msg *message.UserPricesMessage) (*string, error) {
 
+	body, _ := json.Marshal(msg)
 	res, err := cli.SendMessage(ctx, &sqs.SendMessageInput{
-		MessageBody:    aws.String("{ \"id\": \"" + msg.UserId + "\"}"),
+		MessageBody:    aws.String(string(body)),
 		QueueUrl:       aws.String(os.Getenv("RECALC_QUEUE")),
 		MessageGroupId: aws.String("quotation"),
 		MessageAttributes: map[string]types.MessageAttributeValue{

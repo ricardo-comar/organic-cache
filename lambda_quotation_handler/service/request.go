@@ -14,12 +14,12 @@ import (
 	"github.com/ricardo-comar/organic-cache/quotation_handler/gateway"
 )
 
-func RequestQuotation(ctx context.Context, snscli *sns.Client, dyncli *dynamodb.Client, req api.QuotationRequest, reqId string) error {
+func RequestQuotation(ctx context.Context, snscli *sns.Client, dyncli *dynamodb.Client, req api.QuotationRequest) error {
 
 	log.Printf("Saving quotation: %+v", req)
 
 	err := gateway.SaveQuotationRequest(dyncli, entity.QuotationEntity{
-		RequestId:   reqId,
+		RequestId:   req.RequestId,
 		UserId:      req.UserId,
 		ProductList: req.Products,
 		TTL:         strconv.FormatInt(time.Now().Add(time.Minute*5).UnixNano(), 10),
@@ -31,7 +31,7 @@ func RequestQuotation(ctx context.Context, snscli *sns.Client, dyncli *dynamodb.
 
 	log.Printf("Notifying quotation: %+v", req)
 	_, err = gateway.NotifyQuotation(ctx, snscli, message.UserPricesMessage{
-		RequestId: reqId,
+		RequestId: req.RequestId,
 		UserId:    req.UserId,
 	})
 	if err != nil {

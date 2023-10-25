@@ -13,7 +13,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
 )
 
-func SaveActiveUser(cli *dynamodb.Client, user entity.UserEntity) error {
+func SaveActiveUser(cli *dynamodb.Client, user *entity.UserEntity) error {
 
 	log.Printf("Saving user %s", user)
 	item, err := attributevalue.MarshalMap(user)

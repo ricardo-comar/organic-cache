@@ -12,7 +12,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
-	"github.com/aws/aws-sdk-go-v2/service/sns"
 	"github.com/aws/aws-sdk-go-v2/service/sqs"
 	"github.com/ricardo-comar/organic-cache/lib_common/message"
 	"github.com/ricardo-comar/organic-cache/lib_common/model"
@@ -22,7 +21,6 @@ import (
 var cfg aws.Config
 var dyncli dynamodb.Client
 var sqscli sqs.Client
-var snscli sns.Client
 
 func init() {
 	cfg, _ = config.LoadDefaultConfig(context.TODO(), func(o *config.LoadOptions) error {
@@ -34,14 +32,12 @@ func init() {
 
 	dyncli = *dynamodb.NewFromConfig(cfg)
 	sqscli = *sqs.NewFromConfig(cfg)
-	snscli = *sns.NewFromConfig(cfg)
 
 	localendpoint, found := os.LookupEnv("LOCALSTACK_HOSTNAME")
 	if found {
 		localhost := "http://" + localendpoint + ":" + os.Getenv("EDGE_PORT")
 		dyncli = *dynamodb.NewFromConfig(cfg, dynamodb.WithEndpointResolver(dynamodb.EndpointResolverFromURL(localhost)))
 		sqscli = *sqs.New(sqs.Options{Credentials: cfg.Credentials, EndpointResolver: sqs.EndpointResolverFromURL(localhost)})
-		snscli = *sns.New(sns.Options{Credentials: cfg.Credentials, EndpointResolver: sns.EndpointResolverFromURL(localhost)})
 	}
 }
 
@@ -61,10 +57,10 @@ func handleMessages(ctx context.Context, snsEvent events.SNSEvent) error {
 			log.Printf("Erro processando mensagem: %+v", err)
 		}
 
-		log.Printf("Finalizando - mensagem %s em %dms", record.SNS.MessageID, time.Now().Sub(inicioMsg).Milliseconds())
+		log.Printf("Finalizando - mensagem %s em %dms", record.SNS.MessageID, time.Since(inicioMsg).Milliseconds())
 	}
 
-	log.Printf("Finalizando - processamento em %dms", time.Now().Sub(inicioProc).Milliseconds())
+	log.Printf("Finalizando - processamento em %dms", time.Since(inicioProc).Milliseconds())
 	return nil
 }
 
@@ -98,7 +94,10 @@ func handleMessage(ctx context.Context, event events.SNSEventRecord) error {
 
 		quotationRequest, err := gateway.QueryRequest(dyncli, msg.RequestId)
 
-		if err == nil {
+		if err != nil {
+			log.Printf("Erro ao recuperar o quotation request em base : %+v", err)
+
+		} else {
 
 			for _, product := range productPrices.Products {
 				log.Printf("Produto calculado : %+v", product)
