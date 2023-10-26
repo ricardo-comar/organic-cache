@@ -5,6 +5,8 @@ import (
 	"encoding/json"
 	"log"
 	"net/http"
+	"os"
+	"time"
 
 	"github.com/aws/aws-lambda-go/events"
 	"github.com/aws/aws-lambda-go/lambda"
@@ -14,9 +16,13 @@ import (
 )
 
 func main() {
+	waitDuration, err := time.ParseDuration(os.Getenv("WAIT_DURATION"))
+	if err != nil {
+		log.Panic("Invalid value for WAIT_DURATION: ", os.Getenv("WAIT_DURATION"))
+	}
 	lambdaHandler := awsHandler{
 		reqSrv: service.NewRequestService(gateway.NewDynamoGateway(), gateway.NewSNSGateway()),
-		rspSrv: service.NewResponseService(gateway.NewSQSGateway()),
+		rspSrv: service.NewResponseService(waitDuration, gateway.NewSQSGateway()),
 	}
 	lambda.Start(lambdaHandler.handleRequest)
 }

@@ -60,7 +60,7 @@ func InitDynamoClient() *dynamodb.Client {
 
 	localendpoint, found := os.LookupEnv("LOCALSTACK_HOSTNAME")
 	if found {
-		dyncli = dynamodb.NewFromConfig(cfg, dynamodb.WithEndpointResolver(dynamodb.EndpointResolverFromURL("http://"+localendpoint+":4566")))
+		dyncli = dynamodb.New(dynamodb.Options{Credentials: cfg.Credentials, EndpointResolver: dynamodb.EndpointResolverFromURL("http://" + localendpoint + ":" + os.Getenv("EDGE_PORT"))})
 	}
 
 	return dyncli

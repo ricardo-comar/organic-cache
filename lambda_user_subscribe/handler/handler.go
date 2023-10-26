@@ -31,9 +31,20 @@ func (l awsHandler) handleRequest(ctx context.Context, request events.APIGateway
 	}
 
 	userSub, err := l.dynGtw.QuerySubscription(entity.UserId)
-	if err == nil && userSub == nil {
+	if err != nil {
+		log.Println("Error Quering for user subscription: ", err)
+		return events.APIGatewayProxyResponse{StatusCode: http.StatusInternalServerError}, err
+	}
+
+	if userSub == nil {
 		log.Println("New subscription, asking for price recalculation: ", entity.UserId)
-		l.sqsGtw.SendMessage(ctx, &message.UserMessage{UserId: entity.UserId})
+
+		if messageId, err := l.sqsGtw.SendMessage(ctx, &message.UserMessage{UserId: entity.UserId}); err != nil {
+			log.Println("Error sending message to SQS: ", err)
+			return events.APIGatewayProxyResponse{StatusCode: http.StatusInternalServerError}, err
+		} else {
+			log.Println("Message sent: ", messageId)
+		}
 	}
 
 	err = l.dynGtw.SaveActiveUser(entity)
@@ -42,6 +53,6 @@ func (l awsHandler) handleRequest(ctx context.Context, request events.APIGateway
 		return events.APIGatewayProxyResponse{StatusCode: http.StatusInternalServerError}, err
 	}
 
-	return events.APIGatewayProxyResponse{StatusCode: http.StatusCreated}, err
+	return events.APIGatewayProxyResponse{StatusCode: http.StatusAccepted}, err
 
 }

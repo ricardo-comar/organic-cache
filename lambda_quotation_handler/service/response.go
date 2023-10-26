@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"log"
+	"strings"
 	"time"
 
 	"github.com/ricardo-comar/organic-cache/lib_common/api"
@@ -19,17 +20,19 @@ func (*TimeoutError) Error() string {
 }
 
 type MessageChannel struct {
-	Resp  api.QuotationResponse
+	Resp  *api.QuotationResponse
 	Error error
 }
 
 type responseService struct {
-	sqsg gateway.SQSGateway
+	msgWait time.Duration
+	sqsg    gateway.SQSGateway
 }
 
-func NewResponseService(sqsg gateway.SQSGateway) ResponseService {
+func NewResponseService(msgWait time.Duration, sqsg gateway.SQSGateway) ResponseService {
 	rs := &responseService{
-		sqsg: sqsg,
+		msgWait: msgWait,
+		sqsg:    sqsg,
 	}
 	return ResponseService(rs)
 }
@@ -48,9 +51,9 @@ func (rs responseService) WaitForResponse(ctx context.Context, requestId string)
 
 	case resp := <-response:
 		log.Println("Processamento finalizado")
-		return &resp.Resp, resp.Error
+		return resp.Resp, resp.Error
 
-	case <-time.After(10 * time.Second):
+	case <-time.After(rs.msgWait):
 		log.Println("Timeout! A tarefa demorou muito para ser concluída.")
 		return nil, &TimeoutError{}
 	}
@@ -75,7 +78,9 @@ func waitForMessage(response chan MessageChannel, ctx context.Context, sqsg gate
 				log.Println("Mensagem relevante:", *msg.Body)
 
 				quotation := message.QuotationMessage{}
-				json.Unmarshal([]byte(*msg.Body), &quotation)
+				decoder := json.NewDecoder(strings.NewReader(*msg.Body))
+				decoder.DisallowUnknownFields()
+				err = decoder.Decode(&quotation)
 				if err != nil {
 					log.Println("Erro ao transformar mensagem em struct:", err)
 					response <- MessageChannel{Error: err}
@@ -83,14 +88,14 @@ func waitForMessage(response chan MessageChannel, ctx context.Context, sqsg gate
 				}
 
 				log.Println("Removendo a mensagem:", msg.ReceiptHandle)
-				sqsg.DeleteMessage(ctx, msg.ReceiptHandle)
-
+				err = sqsg.DeleteMessage(ctx, msg.ReceiptHandle)
 				if err != nil {
 					log.Println("Erro ao remover a mensagem:", err)
 					response <- MessageChannel{Error: err}
 					return
 				}
-				resp := api.QuotationResponse{
+
+				resp := &api.QuotationResponse{
 					RequestId: quotation.RequestId,
 					UserId:    quotation.UserId,
 					Products:  quotation.Products,

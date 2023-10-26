@@ -1,7 +1,6 @@
 package entity
 
 import (
-	"encoding/json"
 	"strconv"
 	"testing"
 	"time"
@@ -9,16 +8,9 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-type Body struct {
-	ID string `json:"id"`
-}
+func TestSuccess(t *testing.T) {
 
-func TestIntMinTableDriven(t *testing.T) {
-
-	body := Body{ID: "ABC"}
-	bodyStr, _ := json.Marshal(body)
-
-	entity, err := NewUserEntity(string(bodyStr))
+	entity, err := NewUserEntity("{ \"user_id\":\"ABC\"}")
 
 	assert.Nil(t, err, "Unexpected error")
 	assert.NotNil(t, entity, "Unexpected nil entity")
@@ -27,4 +19,28 @@ func TestIntMinTableDriven(t *testing.T) {
 
 	assert.Greater(t, entity.TTL, strconv.FormatInt(time.Now().UnixNano(), 10), "TTL must be greater than now")
 
+}
+
+func TestEmpty(t *testing.T) {
+
+	entity, err := NewUserEntity("")
+
+	assert.NotNil(t, err, "Unexpected nil error")
+	assert.Nil(t, entity, "Unexpected nil entity")
+}
+
+func TestUnexpectedFields(t *testing.T) {
+
+	entity, err := NewUserEntity("{ \"id\":\"ABC\"}")
+
+	assert.NotNil(t, err, "Unexpected nil error")
+	assert.Nil(t, entity, "Unexpected nil entity")
+}
+
+func TestEmptyUserID(t *testing.T) {
+
+	entity, err := NewUserEntity("{ \"ttl\":\"ABC\"}")
+
+	assert.NotNil(t, err, "Unexpected nil error")
+	assert.Nil(t, entity, "Unexpected nil entity")
 }

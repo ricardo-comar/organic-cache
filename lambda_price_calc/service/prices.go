@@ -1,6 +1,8 @@
 package service
 
 import (
+	"errors"
+	"fmt"
 	"log"
 
 	"github.com/ricardo-comar/organic-cache/lib_common/entity"
@@ -27,15 +29,21 @@ func (ps pricesService) GenerateUserPrices(user *message.UserMessage) error {
 
 	products, err := ps.dg.ScanProducts()
 	if err != nil {
-		log.Fatal("Error scanning products :", err)
+		log.Println("Error scanning products :", err)
 		return err
+	} else if products == nil || len(*products) == 0 {
+		log.Println("Invalid product list: ", products)
+		return fmt.Errorf("Invalid Product list: %+v", products)
 	}
 	log.Printf("Products: %+v\n", products)
 
 	userDiscounts, err := ps.dg.QueryUserDiscounts(user)
 	if err != nil {
-		log.Fatal("Error quering user discounts :", err)
+		log.Println("Error quering user discounts :", err)
 		return err
+	} else if userDiscounts == nil {
+		log.Println("Nil User Discounts")
+		return errors.New("Nil User Discounts")
 	}
 	log.Printf("User discounts: %+v\n", userDiscounts)
 
@@ -68,9 +76,9 @@ func (ps pricesService) GenerateUserPrices(user *message.UserMessage) error {
 
 	log.Printf("User prices: %+v\n", prices)
 
-	ps.dg.SaveUserPrices(&prices)
+	err = ps.dg.SaveUserPrices(&prices)
 	if err != nil {
-		log.Fatal("Error saving user prices :", err)
+		log.Println("Error saving user prices :", err)
 		return err
 	}
 

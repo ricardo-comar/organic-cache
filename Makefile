@@ -9,19 +9,19 @@ prepare:
 		@mkdir -p bin
 
 test: clean prepare		
-		@echo "Testing lambdas"
-		@find . -maxdepth 1 -mindepth 1 -type d  -name 'lambda_*'| while read dir; do\
+		@echo "Testing lambdas and libraries"
+		@find . -type d \( -name "lambda_*" -o -name "lib_*" \) | while read -r dir; do\
 			echo "Testing $$dir"; cd $$dir; go test -coverprofile=../bin/$$dir-coverage.out ./...; cd ..; \
 		done
 
 compile: clean prepare		
 		@echo "Compiling lambdas"
-		@find . -maxdepth 1 -mindepth 1 -type d -name 'lambda_*'| while read dir; do\
+		@find . -type d  -name 'lambda_*'| while read -r dir; do\
 			echo "Compiling $$dir"; cd $$dir; GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go build -o ../bin/$$dir handler/handler.go; cd ..; \
 		done
 
 package: build 
-		@find . -maxdepth 1 -mindepth 1 -type d  -name 'lambda_*'| while read dir; do \
+		@find .-type d  -name 'lambda_*'| while read -r dir; do \
 			zip -j bin/$$dir.zip bin/$$dir; \
 		done
 

@@ -3,6 +3,7 @@ package gateway
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"log"
 	"os"
 
@@ -26,7 +27,7 @@ func NewSQSGateway() SQSGateway {
 
 type SQSGateway interface {
 	RecalcMessage(ctx context.Context, msg *message.UserPricesMessage) (*string, error)
-	NotifyQuotation(ctx context.Context, msg message.QuotationMessage) (*string, error)
+	NotifyQuotation(ctx context.Context, msg *message.QuotationMessage) (*string, error)
 }
 
 func (gtw sqsCxt) RecalcMessage(ctx context.Context, msg *message.UserPricesMessage) (*string, error) {
@@ -52,7 +53,12 @@ func (gtw sqsCxt) RecalcMessage(ctx context.Context, msg *message.UserPricesMess
 	return res.MessageId, nil
 }
 
-func (gtw sqsCxt) NotifyQuotation(ctx context.Context, msg message.QuotationMessage) (*string, error) {
+func (gtw sqsCxt) NotifyQuotation(ctx context.Context, msg *message.QuotationMessage) (*string, error) {
+
+	if msg == nil {
+		log.Println("QuotationMessage is nil")
+		return nil, errors.New("nil_quotation_message")
+	}
 
 	body, _ := json.Marshal(msg)
 	res, err := gtw.sqscli.SendMessage(ctx, &sqs.SendMessageInput{
