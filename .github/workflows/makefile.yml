@@ -1,4 +1,4 @@
-name: Makefile CI
+name: Go
 
 on:
   push:
@@ -7,15 +7,19 @@ on:
     branches: [ "main" ]
 
 jobs:
+
   build:
-
     runs-on: ubuntu-latest
-
     steps:
     - uses: actions/checkout@v3
 
-    - name: Run test
-      run: make test
+    - name: Set up Go
+      uses: actions/setup-go@v4
+      with:
+        go-version: '1.21.3'
 
-    - name: Run package
-      run: make package
+    - name: Build
+      run: make
+
+    - name: Test
+      run: make test
