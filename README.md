@@ -3,7 +3,7 @@ Proof of Concept for a organic cache in AWS, offering a price quotation API that
 If the user stops to consume the API after a pre determined time, that price table stops to be recalculated periodically, saving processing time.
 
 ## Solution Diagram
-![Infrastructure Diagram](doc/diagram.png)
+![Infrastructure Diagram](doc/websocket.png)
 [Source](https://app.cloudcraft.co/view/c11241e7-f79b-42b3-b008-85ca557f501c?key=5618624e-2104-4aec-8a13-c1d94a20a96c)
 
 
